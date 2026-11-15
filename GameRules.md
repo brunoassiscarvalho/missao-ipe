@@ -21,16 +21,16 @@ A duração-base é uma estimativa didática em dias, convertida das durações 
 ## Etapas da missão
 
 1. **Montar a nave:** escolher veículo, propulsão, energia, proteção e navegação. Os indicadores de saldo futuro, capacidade científica e dias são atualizados a cada escolha.
-2. **Instalar itens científicos:** escolher um card na grade de itens disponíveis e adicionar à lista lateral de slots da missão por arraste ou pelo botão de seta. A coluna mostra os compartimentos da nave; cada instrumento ocupa o número de slots indicado em sua ficha. Não é possível exceder slots nem capacidade de massa. Itens do inventário do engenheiro podem ser reutilizados; unidades adicionais têm compra prevista. A carga é revisada antes do lançamento.
+2. **Instalar itens científicos:** escolher um item do inventário do engenheiro e adicionar à lista lateral de slots da missão por arraste ou pelo botão de seta. A loja abre pelo botão **Comprar itens**; nela, o engenheiro adiciona equipamentos ao carrinho, confere quantidades e total e finaliza a compra. Os itens adquiridos entram no inventário imediatamente. A coluna da missão mostra os compartimentos da nave; cada instrumento ocupa o número de slots indicado em sua ficha. Não é possível exceder slots nem capacidade de massa. A carga é revisada antes do lançamento.
 
 ## Engenheiro, orçamento e inventário
 
 O engenheiro começa com **US$ 25 milhões** e inventário científico vazio. O perfil, saldo, projetos por missão, inventário, durabilidade e progresso ficam salvos no navegador e são compartilhados entre as missões.
 
-- A seleção de componentes da nave e instrumentos mostra uma **previsão**, não cobra imediatamente.
-- No lançamento, são debitados os componentes selecionados, os instrumentos que precisarem ser comprados e o custo operacional calculado.
+- A seleção de componentes da nave mostra uma **previsão**, não cobra imediatamente. A finalização da compra de instrumentos no carrinho debita o saldo e adiciona as unidades ao inventário.
+- No lançamento, são debitados os componentes selecionados e o custo operacional calculado. Instrumentos comprados previamente já pertencem ao engenheiro e não são cobrados novamente.
 - Um instrumento já disponível no inventário não é comprado outra vez.
-- Cada unidade possui sua própria durabilidade. Ao ser usada, perde uma missão de durabilidade; se ainda tiver usos, volta ao inventário. Ao chegar a zero, é descartada.
+- Cada unidade possui sua própria durabilidade. Antes de ser usada em uma missão, uma unidade comprada pode ser devolvida pelo inventário, com reembolso integral do preço. Unidades selecionadas para uma missão precisam ser removidas da carga antes da devolução. Depois de usada, a unidade não pode mais ser devolvida: perde uma missão de durabilidade e, se ainda tiver usos, volta ao inventário. Ao chegar a zero, é descartada.
 - Itens já reservados em outro projeto não são contados como disponíveis gratuitamente.
 - Em caso de sucesso, ao concluir o relatório da missão, o engenheiro recebe **US$ 5 milhões + US$ 1 milhão por nível da missão + US$ 0,1 milhão por ponto percentual de capacidade científica**. Uma missão sem sucesso não paga recompensa financeira.
 
@@ -66,10 +66,9 @@ Um fator menor que 1 reduz os dias; um fator maior que 1 os aumenta. A massa adi
 O orçamento é compartilhado pelo engenheiro entre missões. O custo previsto de uma missão combina:
 
 - soma dos preços dos componentes da nave;
-- custo dos instrumentos selecionados que não estejam disponíveis no inventário;
 - custo operacional de **US$ 0,0005 milhão (US$ 500) por dia** multiplicado pelos dias calculados.
 
-O painel da montagem e da carga científica mostra o saldo do engenheiro e o saldo previsto depois do lançamento. Selecionar ou trocar equipamento **não debita** o orçamento: a compra e a operação só são pagas quando a missão é lançada. Uma missão não pode ser lançada se o custo previsto superar o saldo disponível.
+O painel da montagem e da carga científica mostra o saldo do engenheiro e o saldo previsto depois do lançamento. Selecionar ou trocar componentes **não debita** o orçamento: componentes e operação só são pagos quando a missão é lançada. Compras científicas são debitadas ao finalizar o carrinho; a devolução permitida de uma unidade ainda não usada reembolsa seu preço. Uma missão não pode ser lançada se o custo previsto superar o saldo disponível.
 
 ### Capacidade científica e sucesso
 

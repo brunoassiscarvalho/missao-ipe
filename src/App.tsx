@@ -13,12 +13,15 @@ import {
   Gauge,
   LockKeyhole,
   Orbit,
+  Plus,
+  Minus,
   Radio,
   Rocket,
   RotateCcw,
   Satellite,
   ShieldCheck,
   Sparkles,
+  ShoppingCart,
   Target,
   Telescope,
   Trophy,
@@ -127,7 +130,11 @@ type StoredScienceItem = {
   instanceId: string;
   itemId: string;
   usesRemaining: number;
+  refundable: boolean;
 };
+
+type StoredScienceItemData = Omit<StoredScienceItem, "refundable"> &
+  Partial<Pick<StoredScienceItem, "refundable">>;
 
 type MissionMetrics = {
   mass: number;
@@ -142,12 +149,18 @@ type MissionMetrics = {
   reliability: number;
   scienceCapacity: number;
   efficiency: number;
+  cargoCapacity: number;
+  cargoUsed: number;
+  remainingCargo: number;
   payloadReady: boolean;
   scienceSlotsUsed: number;
   scienceSlotsAvailable: number;
   canLaunch: boolean;
   ready: boolean;
 };
+
+type StoredMissionMetrics = Omit<MissionMetrics, "cargoCapacity" | "cargoUsed" | "remainingCargo"> &
+  Partial<Pick<MissionMetrics, "cargoCapacity" | "cargoUsed" | "remainingCargo">>;
 
 type LaunchRecord = {
   id: string;
@@ -821,14 +834,15 @@ function migrateEngineerState(value: unknown): EngineerState | undefined {
     Object.values(map).every(
       (selection) => Array.isArray(selection) && selection.every((id) => typeof id === "string"),
     );
-  const isStoredItem = (item: unknown): item is StoredScienceItem =>
+  const isStoredItem = (item: unknown): item is StoredScienceItemData =>
     isRecord(item) &&
     typeof item.instanceId === "string" &&
     typeof item.itemId === "string" &&
     typeof item.usesRemaining === "number" &&
     Number.isFinite(item.usesRemaining) &&
-    item.usesRemaining > 0;
-  const isMetrics = (metrics: unknown): metrics is MissionMetrics =>
+    item.usesRemaining > 0 &&
+    (item.refundable === undefined || typeof item.refundable === "boolean");
+  const isMetrics = (metrics: unknown): metrics is StoredMissionMetrics =>
     isRecord(metrics) &&
     [
       "mass",
@@ -846,6 +860,9 @@ function migrateEngineerState(value: unknown): EngineerState | undefined {
       "scienceSlotsUsed",
       "scienceSlotsAvailable",
     ].every((key) => typeof metrics[key] === "number") &&
+    ["cargoCapacity", "cargoUsed", "remainingCargo"].every(
+      (key) => metrics[key] === undefined || typeof metrics[key] === "number",
+    ) &&
     ["payloadReady", "canLaunch", "ready"].every((key) => typeof metrics[key] === "boolean");
   const budget =
     typeof value.budget === "number" && Number.isFinite(value.budget)
@@ -858,10 +875,20 @@ function migrateEngineerState(value: unknown): EngineerState | undefined {
     ? value.scienceSelections
     : {};
   const inventory = Array.isArray(value.inventory)
-    ? value.inventory.filter(
-        (item): item is StoredScienceItem =>
-          isStoredItem(item) && SCIENCE_ITEMS.some((scienceItem) => scienceItem.id === item.itemId),
-      )
+    ? value.inventory
+        .filter(
+          (item): item is StoredScienceItemData =>
+            isStoredItem(item) &&
+            SCIENCE_ITEMS.some((scienceItem) => scienceItem.id === item.itemId),
+        )
+        .map((item): StoredScienceItem => ({
+          ...item,
+          refundable:
+            item.refundable !== false &&
+            item.usesRemaining ===
+              (SCIENCE_ITEMS.find((scienceItem) => scienceItem.id === item.itemId)?.durability ??
+                0),
+        }))
     : [];
   const unlockedLevel =
     typeof value.unlockedLevel === "number" && Number.isFinite(value.unlockedLevel)
@@ -893,16 +920,23 @@ function migrateEngineerState(value: unknown): EngineerState | undefined {
               SCIENCE_ITEMS.some((scienceItem) => scienceItem.id === itemId),
           )
         : [];
-      const metrics = isMetrics(savedLaunch.metrics)
-        ? savedLaunch.metrics
-        : calculateMissionMetrics(
-            mission,
-            shipSelection,
-            scienceSelection,
-            inventory,
-            scienceSelections,
-            budget,
-          );
+      const currentMetrics = calculateMissionMetrics(
+        mission,
+        shipSelection,
+        scienceSelection,
+        inventory,
+        scienceSelections,
+        budget,
+      );
+      const savedMetrics = isMetrics(savedLaunch.metrics) ? savedLaunch.metrics : undefined;
+      const metrics: MissionMetrics = savedMetrics
+        ? {
+            ...savedMetrics,
+            cargoCapacity: savedMetrics.cargoCapacity ?? currentMetrics.cargoCapacity,
+            cargoUsed: savedMetrics.cargoUsed ?? currentMetrics.cargoUsed,
+            remainingCargo: savedMetrics.remainingCargo ?? currentMetrics.remainingCargo,
+          }
+        : currentMetrics;
       const success =
         typeof savedLaunch.success === "boolean" ? savedLaunch.success : metrics.ready;
 
@@ -1566,9 +1600,10 @@ function calculateMissionMetrics(
   const projectedCost = equipmentCost + sciencePurchaseCost + operatingCost;
   const remainingBudget = budget - projectedCost;
   const efficiency = scienceCapacity / projectedCost;
-  const payloadReady =
-    (vehicle?.cargoCapacity ?? 0) >= mission.payloadKg + scienceMass &&
-    scienceSlotsUsed <= scienceSlotsAvailable;
+  const cargoCapacity = vehicle?.cargoCapacity ?? 0;
+  const cargoUsed = mission.payloadKg + scienceMass;
+  const remainingCargo = cargoCapacity - cargoUsed;
+  const payloadReady = cargoCapacity >= cargoUsed && scienceSlotsUsed <= scienceSlotsAvailable;
   const ready =
     payloadReady &&
     mass < 1800 &&
@@ -1590,6 +1625,9 @@ function calculateMissionMetrics(
     reliability,
     scienceCapacity,
     efficiency,
+    cargoCapacity,
+    cargoUsed,
+    remainingCargo,
     payloadReady,
     scienceSlotsUsed,
     scienceSlotsAvailable,
@@ -1665,6 +1703,35 @@ function BuildStatus({ metrics }: { metrics: MissionMetrics }) {
         </div>
         <small>Operação prevista: ${metrics.operatingCost.toFixed(3)} mi</small>
       </div>
+      <div className="build-status-card">
+        <span>
+          <Weight size={15} /> CAPACIDADE DE CARGA
+        </span>
+        <strong>
+          {Math.max(0, metrics.remainingCargo).toLocaleString("pt-BR")} <small>kg restantes</small>
+        </strong>
+        <div
+          className="build-status-track"
+          role="progressbar"
+          aria-label="Capacidade de carga utilizada"
+          aria-valuemin={0}
+          aria-valuemax={metrics.cargoCapacity}
+          aria-valuenow={Math.min(metrics.cargoUsed, metrics.cargoCapacity)}
+        >
+          <i
+            data-over-budget={metrics.remainingCargo < 0}
+            style={{
+              width: `${Math.min((metrics.cargoUsed / Math.max(metrics.cargoCapacity, 1)) * 100, 100)}%`,
+            }}
+          />
+        </div>
+        <small>
+          {metrics.cargoUsed.toLocaleString("pt-BR")} /{" "}
+          {metrics.cargoCapacity.toLocaleString("pt-BR")} kg ocupados
+          {metrics.remainingCargo < 0 &&
+            ` · Excedido por ${Math.abs(metrics.remainingCargo).toLocaleString("pt-BR")} kg`}
+        </small>
+      </div>
     </section>
   );
 }
@@ -1676,6 +1743,8 @@ function ScienceLoadoutScreen({
   scienceSelections,
   budget,
   onChange,
+  onPurchase,
+  onReturn,
 }: {
   selection: Record<string, string>;
   scienceSelection: string[];
@@ -1683,13 +1752,27 @@ function ScienceLoadoutScreen({
   scienceSelections: Record<string, string[]>;
   budget: number;
   onChange: (itemId: string, operation: "add" | "remove") => void;
+  onPurchase: (cart: Record<string, number>) => void;
+  onReturn: (instanceId: string) => void;
 }) {
   const navigate = useNavigate();
   const { missionId = "iss" } = useParams();
   const mission = missions.find((item) => item.id === missionId) ?? missions[0];
   const [detailId, setDetailId] = useState(SCIENCE_ITEMS[0].id);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isShopOpen, setIsShopOpen] = useState(false);
+  const [cart, setCart] = useState<Record<string, number>>({});
+  const [shopFeedback, setShopFeedback] = useState("");
+  const [inventoryFeedback, setInventoryFeedback] = useState("");
   const detail = SCIENCE_ITEMS.find((item) => item.id === detailId) ?? SCIENCE_ITEMS[0];
+  const cartItems = Object.entries(cart)
+    .map(([itemId, quantity]) => ({
+      item: SCIENCE_ITEMS.find((entry) => entry.id === itemId),
+      quantity,
+    }))
+    .filter((entry): entry is { item: ScienceItem; quantity: number } => Boolean(entry.item));
+  const cartCount = cartItems.reduce((sum, entry) => sum + entry.quantity, 0);
+  const cartTotal = cartItems.reduce((sum, entry) => sum + entry.item.cost * entry.quantity, 0);
   const metrics = calculateMissionMetrics(
     mission,
     selection,
@@ -1720,10 +1803,16 @@ function ScienceLoadoutScreen({
   }, {});
   const canAdd = (item: ScienceItem) => {
     const usedSlots = metrics.scienceSlotsUsed + item.slots;
+    const selectedCount = selectedCounts[item.id] ?? 0;
+    const availableOwned = Math.max(
+      0,
+      (ownedCounts[item.id] ?? 0) - (reservedCounts[item.id] ?? 0),
+    );
     const addedMass = scienceSelection.reduce((sum, id) => {
       return sum + (SCIENCE_ITEMS.find((entry) => entry.id === id)?.mass ?? 0);
     }, 0);
     return (
+      selectedCount < availableOwned &&
       usedSlots <= metrics.scienceSlotsAvailable &&
       mission.payloadKg + addedMass + item.mass <= (vehicle?.cargoCapacity ?? 0)
     );
@@ -1766,6 +1855,218 @@ function ScienceLoadoutScreen({
     if (item && canAdd(item)) onChange(itemId, "add");
   };
 
+  useEffect(() => {
+    if (!isShopOpen) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsShopOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [isShopOpen]);
+
+  if (isShopOpen) {
+    return (
+      <main className="science-shop-screen">
+        <header className="science-shop-header">
+          <div className="science-shop-title">
+            <span className="kicker">LOJA DE EQUIPAMENTOS · {mission.code}</span>
+            <h1>Comprar instrumentos científicos</h1>
+            <p>
+              Saldo disponível: <strong>{formatBudget(budget)}</strong>
+            </p>
+          </div>
+          <button className="science-shop-back" onClick={() => setIsShopOpen(false)}>
+            <ArrowLeft size={17} /> Voltar ao inventário
+            {cartCount > 0 && <span>{cartCount}</span>}
+          </button>
+        </header>
+
+        <div className="science-shop-layout">
+          <section className="science-shop-catalog" aria-label="Instrumentos para comprar">
+            <header className="science-shop-column-heading">
+              <span>
+                <Telescope size={16} /> CATÁLOGO
+              </span>
+              <small>{SCIENCE_ITEMS.length} instrumentos</small>
+            </header>
+            <div className="science-shop-grid">
+              {SCIENCE_ITEMS.map((item) => (
+                <button
+                  className="science-shop-item"
+                  key={item.id}
+                  data-selected={detail.id === item.id}
+                  onClick={() => {
+                    setDetailId(item.id);
+                    setShopFeedback("");
+                  }}
+                >
+                  <span className="science-item-icon">
+                    <Telescope size={20} />
+                  </span>
+                  <strong>{item.name}</strong>
+                  <small>{item.shortName}</small>
+                  <span className="science-shop-price">${item.cost.toFixed(1)} mi</span>
+                </button>
+              ))}
+            </div>
+          </section>
+
+          <section className="science-shop-detail" aria-live="polite">
+            <header className="science-shop-column-heading">
+              <span>
+                <BookOpen size={16} /> DETALHES DO ITEM
+              </span>
+            </header>
+            <span className="detail-type">{detail.shortName}</span>
+            <h2>{detail.name}</h2>
+            <p>{detail.description}</p>
+            <button
+              className="science-shop-purchase"
+              disabled={cartTotal + detail.cost > budget}
+              onClick={() => {
+                if (cartTotal + detail.cost > budget) {
+                  setShopFeedback("Saldo insuficiente para adicionar outra unidade.");
+                  return;
+                }
+                setCart((current) => ({
+                  ...current,
+                  [detail.id]: (current[detail.id] ?? 0) + 1,
+                }));
+                setShopFeedback(`${detail.shortName} adicionado ao carrinho.`);
+              }}
+            >
+              <ShoppingCart size={17} />
+              {cartTotal + detail.cost > budget
+                ? "Saldo insuficiente"
+                : `Adicionar ao carrinho · $${detail.cost.toFixed(1)} mi`}
+            </button>
+            {shopFeedback && (
+              <p className="science-shop-feedback" role="status">
+                <Check size={14} /> {shopFeedback}
+              </p>
+            )}
+            <dl className="detail-stats">
+              <div>
+                <dt>PREÇO</dt>
+                <dd>${detail.cost.toFixed(1)} mi</dd>
+              </div>
+              <div>
+                <dt>MASSA</dt>
+                <dd>{detail.mass} kg</dd>
+              </div>
+              <div>
+                <dt>ESPAÇO NA NAVE</dt>
+                <dd>{detail.slots} compartimento(s)</dd>
+              </div>
+              <div>
+                <dt>DURABILIDADE</dt>
+                <dd>{detail.durability} missões</dd>
+              </div>
+              <div>
+                <dt>BÔNUS CIENTÍFICO BASE</dt>
+                <dd>+{detail.scienceBonus} p.p.</dd>
+              </div>
+              <div>
+                <dt>AFINIDADE COM {mission.themeLabel.toUpperCase()}</dt>
+                <dd>{detail.affinity[mission.theme] ?? 0}%</dd>
+              </div>
+              <div>
+                <dt>NO INVENTÁRIO</dt>
+                <dd>{ownedCounts[detail.id] ?? 0} unidade(s)</dd>
+              </div>
+            </dl>
+            <aside className="nasa-fact">
+              <span>
+                <BookOpen size={15} /> REGRA DO JOGO
+              </span>
+              <p>{detail.rule}</p>
+            </aside>
+          </section>
+
+          <section className="science-cart science-cart-panel" aria-label="Carrinho de compras">
+            <header>
+              <span>
+                <ShoppingCart size={17} /> CARRINHO
+              </span>
+              <strong>{cartCount} item(ns)</strong>
+            </header>
+            {cartItems.length === 0 ? (
+              <p className="science-cart-empty">
+                Seu carrinho está vazio. Escolha um instrumento no catálogo para começar.
+              </p>
+            ) : (
+              <ul>
+                {cartItems.map(({ item, quantity }) => (
+                  <li key={item.id}>
+                    <span>
+                      <strong>{item.shortName}</strong>
+                      <small>
+                        {quantity} × ${item.cost.toFixed(1)} mi
+                      </small>
+                    </span>
+                    <div className="science-cart-quantity">
+                      <button
+                        aria-label={`Remover uma unidade de ${item.name} do carrinho`}
+                        onClick={() => {
+                          setCart((current) => {
+                            const nextQuantity = (current[item.id] ?? 0) - 1;
+                            if (nextQuantity <= 0) {
+                              const next = { ...current };
+                              delete next[item.id];
+                              return next;
+                            }
+                            return { ...current, [item.id]: nextQuantity };
+                          });
+                          setShopFeedback(`${item.shortName} removido do carrinho.`);
+                        }}
+                      >
+                        <Minus size={13} />
+                      </button>
+                      <strong>{quantity}</strong>
+                      <button
+                        aria-label={`Adicionar uma unidade de ${item.name} ao carrinho`}
+                        disabled={cartTotal + item.cost > budget}
+                        onClick={() => {
+                          setCart((current) => ({
+                            ...current,
+                            [item.id]: (current[item.id] ?? 0) + 1,
+                          }));
+                          setShopFeedback(`${item.shortName} adicionado ao carrinho.`);
+                        }}
+                      >
+                        <Plus size={13} />
+                      </button>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+            <div className="science-cart-total">
+              <span>Total da compra</span>
+              <strong>${cartTotal.toFixed(1)} mi</strong>
+            </div>
+            <small className="science-cart-balance">
+              Saldo após a compra: {formatBudget(budget - cartTotal)}
+            </small>
+            <button
+              className="science-cart-checkout"
+              disabled={cartCount === 0 || cartTotal > budget}
+              onClick={() => {
+                onPurchase(cart);
+                setCart({});
+                setShopFeedback(
+                  `Compra concluída! ${cartCount} instrumento(s) adicionado(s) ao inventário.`,
+                );
+              }}
+            >
+              <Check size={16} /> Finalizar compra
+            </button>
+          </section>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="build-screen science-screen">
       <section className="build-content">
@@ -1786,20 +2087,41 @@ function ScienceLoadoutScreen({
           <section className="science-catalog" aria-label="Itens científicos disponíveis">
             <header className="science-list-heading">
               <span>
-                <Telescope size={15} /> ITENS DISPONÍVEIS
+                <Telescope size={15} /> MEU INVENTÁRIO
               </span>
-              <small>Arraste ou use a seta para adicionar</small>
+              <button
+                className="science-buy-button"
+                onClick={() => {
+                  setShopFeedback("");
+                  setIsShopOpen(true);
+                }}
+              >
+                <ShoppingCart size={15} /> Comprar itens
+                {cartCount > 0 && <span>{cartCount}</span>}
+              </button>
             </header>
             <div className="science-catalog-grid">
-              {SCIENCE_ITEMS.map((item) => {
+              {SCIENCE_ITEMS.filter((item) => (ownedCounts[item.id] ?? 0) > 0).map((item) => {
                 const affinity = item.affinity[mission.theme] ?? 0;
                 const selectedCount = selectedCounts[item.id] ?? 0;
                 const availableOwned = Math.max(
                   0,
                   (ownedCounts[item.id] ?? 0) - (reservedCounts[item.id] ?? 0),
                 );
-                const purchaseCount = Math.max(0, selectedCount - availableOwned);
                 const addDisabled = !canAdd(item);
+                const refundableCount = inventory.filter(
+                  (entry) => entry.itemId === item.id && entry.refundable,
+                ).length;
+                const returnableCount = Math.min(
+                  refundableCount,
+                  Math.max(
+                    0,
+                    (ownedCounts[item.id] ?? 0) - (reservedCounts[item.id] ?? 0) - selectedCount,
+                  ),
+                );
+                const returnableInstance = inventory.find(
+                  (entry) => entry.itemId === item.id && entry.refundable,
+                );
                 return (
                   <article
                     className="science-item-card"
@@ -1834,8 +2156,7 @@ function ScienceLoadoutScreen({
                     </button>
                     <div className="science-item-actions">
                       <small>
-                        {availableOwned} no inventário
-                        {purchaseCount > 0 && ` · ${purchaseCount} compra(s) prevista(s)`}
+                        {ownedCounts[item.id]} unidade(s) · {availableOwned} disponível(is)
                       </small>
                       <strong aria-label={`${selectedCount} selecionados`}>{selectedCount}</strong>
                     </div>
@@ -1850,10 +2171,41 @@ function ScienceLoadoutScreen({
                     >
                       <ArrowRight size={17} />
                     </button>
+                    <div className="science-inventory-return">
+                      <button
+                        disabled={returnableCount === 0 || !returnableInstance}
+                        onClick={() => {
+                          if (!returnableInstance) return;
+                          onReturn(returnableInstance.instanceId);
+                          setInventoryFeedback(
+                            `${item.shortName} devolvido. $${item.cost.toFixed(1)} mi foram reembolsados.`,
+                          );
+                        }}
+                      >
+                        Devolver 1 · +${item.cost.toFixed(1)} mi
+                      </button>
+                      <small>
+                        {refundableCount === 0
+                          ? "Itens usados não podem ser devolvidos."
+                          : returnableCount === 0
+                            ? "Remova da missão para devolver."
+                            : `${returnableCount} unidade(s) sem uso devolvível(is).`}
+                      </small>
+                    </div>
                   </article>
                 );
               })}
+              {inventory.length === 0 && (
+                <p className="science-inventory-empty">
+                  Seu inventário está vazio. Compre instrumentos para equipar a missão.
+                </p>
+              )}
             </div>
+            {inventoryFeedback && (
+              <p className="science-inventory-feedback" role="status">
+                <Check size={14} /> {inventoryFeedback}
+              </p>
+            )}
           </section>
 
           <section
@@ -2014,6 +2366,40 @@ function ReviewScreen({
   const selectedItems = scienceSelection
     .map((id) => SCIENCE_ITEMS.find((item) => item.id === id))
     .filter((item): item is ScienceItem => item !== undefined);
+  const vehicleGroup = componentGroups.find((group) =>
+    group.options.some((option) => option.cargoCapacity !== undefined),
+  );
+  const selectedVehicle = vehicleGroup?.options.find(
+    (option) => option.id === selection[vehicleGroup.id],
+  );
+  const sciencePayloadMass =
+    mission.payloadKg + selectedItems.reduce((sum, item) => sum + item.mass, 0);
+  const exceedsCargoCapacity =
+    sciencePayloadMass > (selectedVehicle?.cargoCapacity ?? Number.POSITIVE_INFINITY);
+  const exceedsScienceSlots = metrics.scienceSlotsUsed > metrics.scienceSlotsAvailable;
+  const reviewCaveats = [
+    exceedsCargoCapacity
+      ? `A carga científica soma ${sciencePayloadMass} kg, acima da capacidade de ${selectedVehicle?.cargoCapacity} kg do veículo. Escolha um veículo com maior capacidade ou reduza os instrumentos.`
+      : undefined,
+    exceedsScienceSlots
+      ? `Os instrumentos ocupam ${metrics.scienceSlotsUsed} espaços, mas o veículo oferece ${metrics.scienceSlotsAvailable}. Remova instrumentos ou escolha um veículo com mais espaços.`
+      : undefined,
+    metrics.mass >= 1800
+      ? `A massa total é ${metrics.mass.toLocaleString("pt-BR")} kg; o limite da missão é menor que 1.800 kg. Reduza a massa da nave ou da carga.`
+      : undefined,
+    metrics.projectedCost > budget
+      ? `O custo projetado de ${formatBudget(metrics.projectedCost)} excede o orçamento disponível de ${formatBudget(budget)}. Reduza os custos de montagem, instrumentos ou operação.`
+      : undefined,
+    metrics.energy < 30
+      ? `A reserva de energia é de ${metrics.energy} unidades, abaixo da meta de 30. Escolha sistemas que consumam menos energia ou forneçam mais.`
+      : undefined,
+    metrics.scienceCapacity < 95
+      ? `A capacidade científica está em ${metrics.scienceCapacity}%, abaixo da meta de 95%. Melhore a confiabilidade ou selecione instrumentos com maior afinidade com a missão.`
+      : undefined,
+    metrics.efficiency < 5
+      ? `A eficiência científica é ${metrics.efficiency.toLocaleString("pt-BR", { maximumFractionDigits: 2 })}, abaixo da meta de 5. Aumente a capacidade científica ou reduza o custo projetado.`
+      : undefined,
+  ].filter((caveat): caveat is string => caveat !== undefined);
 
   return (
     <main className="review-screen">
@@ -2114,9 +2500,16 @@ function ReviewScreen({
                   {metrics.ready
                     ? "Todos os sistemas críticos estão dentro dos limites."
                     : metrics.canLaunch
-                      ? "A configuração pode voar, mas alguns critérios de sucesso não foram atingidos."
-                      : "Ajuste a capacidade de carga ou o orçamento para poder lançar."}
+                      ? "A configuração pode voar, mas alguns critérios de sucesso não foram atingidos. Veja as ressalvas abaixo."
+                      : "A configuração não pode voar ainda. Corrija as ressalvas abaixo para liberar o lançamento."}
                 </p>
+                {!metrics.ready && reviewCaveats.length > 0 && (
+                  <ul className="review-caveats" aria-label="Ressalvas da missão">
+                    {reviewCaveats.map((caveat) => (
+                      <li key={caveat}>{caveat}</li>
+                    ))}
+                  </ul>
+                )}
               </div>
             </div>
           </section>
@@ -2146,6 +2539,14 @@ function ResultsScreen({
   const navigate = useNavigate();
   const { missionId = "iss" } = useParams();
   const mission = missions.find((item) => item.id === missionId) ?? missions[0];
+  const [showResults, setShowResults] = useState(missionId !== "luna" || !launch);
+
+  useEffect(() => {
+    if (!launch || missionId !== "luna") return;
+    const timer = window.setTimeout(() => setShowResults(true), 3000);
+    return () => window.clearTimeout(timer);
+  }, [launch, missionId]);
+
   if (!launch) return <Navigate to={`/mission/${mission.id}/review`} replace />;
   const metrics = launch.metrics;
   const scienceItems = launch.scienceSelection
@@ -2159,12 +2560,28 @@ function ResultsScreen({
 
   return (
     <main className="results-screen">
+      {missionId === "luna" && !showResults && (
+        <div className="lunar-intro" role="status" aria-label="A sonda está orbitando a Lua">
+          <div className="lunar-orbit-scene" aria-hidden="true">
+            <div className="lunar-planet">
+              <span className="lunar-crater lunar-crater-one" />
+              <span className="lunar-crater lunar-crater-two" />
+              <span className="lunar-crater lunar-crater-three" />
+            </div>
+            <div className="lunar-orbit">
+              <span className="lunar-orbiting-body" />
+            </div>
+          </div>
+          <span className="kicker">APROXIMAÇÃO LUNAR</span>
+          <p>A sonda está entrando em órbita...</p>
+        </div>
+      )}
       <div className="result-ambient" aria-hidden="true">
         <div className="result-planet" />
         <div className="result-path" />
         <Satellite size={36} />
       </div>
-      <section className="results-card">
+      <section className="results-card" aria-hidden={!showResults} inert={!showResults}>
         <div className="result-emblem" data-success={launch.success}>
           {launch.success ? <Trophy size={34} /> : <Target size={34} />}
         </div>
@@ -2346,6 +2763,71 @@ function ScienceRoute({
       inventory={engineer.inventory}
       scienceSelections={engineer.scienceSelections}
       budget={engineer.budget}
+      onPurchase={(cart) =>
+        setEngineer((current) => {
+          const purchases = Object.entries(cart)
+            .map(([itemId, quantity]) => ({
+              item: SCIENCE_ITEMS.find((entry) => entry.id === itemId),
+              quantity,
+            }))
+            .filter(
+              (entry): entry is { item: ScienceItem; quantity: number } =>
+                entry.item !== undefined && Number.isInteger(entry.quantity) && entry.quantity > 0,
+            );
+          const total = purchases.reduce((sum, entry) => sum + entry.item.cost * entry.quantity, 0);
+          if (purchases.length === 0 || current.budget < total) return current;
+          return {
+            ...current,
+            budget: current.budget - total,
+            inventory: [
+              ...current.inventory,
+              ...purchases.flatMap(({ item, quantity }) =>
+                Array.from({ length: quantity }, () => ({
+                  instanceId: crypto.randomUUID(),
+                  itemId: item.id,
+                  usesRemaining: item.durability,
+                  refundable: true,
+                })),
+              ),
+            ],
+          };
+        })
+      }
+      onReturn={(instanceId) =>
+        setEngineer((current) => {
+          const instance = current.inventory.find((item) => item.instanceId === instanceId);
+          const scienceItem = SCIENCE_ITEMS.find((item) => item.id === instance?.itemId);
+          if (
+            !instance?.refundable ||
+            !scienceItem ||
+            instance.usesRemaining !== scienceItem.durability
+          ) {
+            return current;
+          }
+
+          const currentSelection = current.scienceSelections[missionId] ?? [];
+          const reservedByOtherMissions = Object.entries(current.scienceSelections).reduce(
+            (count, [reservedMissionId, ids]) =>
+              reservedMissionId !== missionId
+                ? count + ids.filter((id) => id === instance.itemId).length
+                : count,
+            0,
+          );
+          const reservedByCurrentMission = currentSelection.filter(
+            (id) => id === instance.itemId,
+          ).length;
+          const inventoryCount = current.inventory.filter(
+            (item) => item.itemId === instance.itemId,
+          ).length;
+          if (inventoryCount <= reservedByOtherMissions + reservedByCurrentMission) return current;
+
+          return {
+            ...current,
+            budget: current.budget + scienceItem.cost,
+            inventory: current.inventory.filter((item) => item.instanceId !== instanceId),
+          };
+        })
+      }
       onChange={(itemId, operation) =>
         setEngineer((current) => {
           const currentSelection = current.scienceSelections[missionId] ?? [];
@@ -2359,6 +2841,19 @@ function ScienceRoute({
                   const lastIndex = currentSelection.lastIndexOf(itemId);
                   return id !== itemId || index !== lastIndex;
                 });
+          const reservedCount = Object.entries(current.scienceSelections).reduce(
+            (count, [reservedMissionId, ids]) =>
+              reservedMissionId !== missionId
+                ? count + ids.filter((id) => id === itemId).length
+                : count,
+            0,
+          );
+          const availableOwned = Math.max(
+            0,
+            current.inventory.filter((entry) => entry.itemId === itemId).length - reservedCount,
+          );
+          const selectedCount = currentSelection.filter((id) => id === itemId).length;
+          if (operation === "add" && selectedCount >= availableOwned) return current;
           const metrics = calculateMissionMetrics(
             mission,
             selection,
@@ -2497,11 +2992,12 @@ function launchMission(
               instanceId: crypto.randomUUID(),
               itemId,
               usesRemaining: item.durability,
+              refundable: false,
             };
       if (index < availableOwned.length) consumedInstances.add(instance.instanceId);
       const remainingUses = instance.usesRemaining - 1;
       if (remainingUses > 0) {
-        damagedInstances.push({ ...instance, usesRemaining: remainingUses });
+        damagedInstances.push({ ...instance, usesRemaining: remainingUses, refundable: false });
       }
     }
   }
