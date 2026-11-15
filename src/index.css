@@ -106,7 +106,7 @@
     0 12px 35px rgb(0 0 0 / 35%);
   color: #d9f9ff;
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 700;
 }
 
@@ -171,7 +171,7 @@
 
 .engineer-stats small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.06em;
 }
@@ -179,13 +179,13 @@
 .engineer-stats strong {
   color: var(--text);
   font-family: var(--font-display);
-  font-size: 14px;
+  font-size: 16px;
 }
 
 .kicker,
 .detail-type {
   color: var(--cyan);
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.18em;
 }
@@ -207,14 +207,14 @@
 .review-intro p {
   margin-top: 9px;
   color: var(--muted);
-  font-size: clamp(12px, 1.2vw, 15px);
+  font-size: 16px;
 }
 
 .mission-theme {
   display: block;
   margin-top: 7px;
   color: #7e9ba8;
-  font-size: 11px;
+  font-size: 16px;
   letter-spacing: 0.08em;
 }
 
@@ -391,7 +391,7 @@
   align-items: center;
   justify-content: space-between;
   color: var(--cyan);
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.12em;
 }
@@ -417,7 +417,7 @@
 
 .mission-card-copy > p {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 16px;
 }
 
 .mission-facts {
@@ -433,7 +433,7 @@
   align-items: center;
   gap: 4px;
   color: #94acb9;
-  font-size: 11px;
+  font-size: 16px;
 }
 
 .mission-facts svg {
@@ -453,7 +453,7 @@
   box-shadow: 0 10px 25px rgb(26 173 203 / 16%);
   color: #031119;
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.04em;
 }
@@ -490,7 +490,7 @@
   align-items: center;
   gap: 7px;
   color: #526e7b;
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.12em;
 }
@@ -545,7 +545,7 @@
   max-width: 600px;
   margin-top: clamp(16px, 2.5vh, 25px);
   color: #91aebb;
-  font-size: clamp(12px, 1.15vw, 15px);
+  font-size: 16px;
   line-height: 1.7;
 }
 
@@ -575,7 +575,7 @@
 
 .story-transmission small {
   color: var(--cyan);
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.13em;
 }
@@ -583,7 +583,7 @@
 .story-transmission p {
   margin-top: 5px;
   color: #aac2cc;
-  font-size: clamp(11px, 1vw, 12px);
+  font-size: 16px;
   line-height: 1.55;
 }
 
@@ -597,7 +597,7 @@
   align-items: center;
   gap: 7px;
   color: #7f9ba8;
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.12em;
 }
@@ -609,7 +609,7 @@
 .context-challenge p {
   margin-top: 5px;
   color: #6f8b98;
-  font-size: 11px;
+  font-size: 16px;
   line-height: 1.5;
 }
 
@@ -711,7 +711,7 @@
 
 .context-target span {
   color: var(--cyan);
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.14em;
 }
@@ -719,7 +719,7 @@
 .context-target strong {
   margin-top: 3px;
   font-family: var(--font-display);
-  font-size: clamp(14px, 1.6vw, 20px);
+  font-size: clamp(16px, 1.6vw, 20px);
 }
 
 .context-target small {
@@ -728,7 +728,7 @@
   right: 18px;
   color: #5e7e8c;
   font-family: monospace;
-  font-size: 11px;
+  font-size: 16px;
 }
 
 .context-metrics {
@@ -755,7 +755,7 @@
   align-items: center;
   gap: 5px;
   color: #5e7e8c;
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.08em;
 }
@@ -767,7 +767,7 @@
 .context-metrics dd {
   margin-top: 3px;
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 600;
 }
 
@@ -811,7 +811,7 @@
   align-items: center;
   gap: 6px;
   color: #8ca9b7;
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.08em;
 }
@@ -831,14 +831,14 @@
 .build-status-card > strong small {
   color: #91aab5;
   font-family: var(--font-body);
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 500;
 }
 
 .build-status-card > small {
   margin-top: 5px;
   color: #718e9b;
-  font-size: 11px;
+  font-size: 16px;
   line-height: 1.3;
 }
 
@@ -937,7 +937,7 @@
 .stage-nav-card > span {
   overflow: hidden;
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1087,7 +1087,7 @@
   padding: 9px 10px;
   border: 1px solid var(--line);
   border-radius: 10px;
-  font-size: 11px;
+  font-size: 16px;
   letter-spacing: 0.08em;
 }
 
@@ -1101,7 +1101,7 @@
 .science-list-heading > strong,
 .science-list-heading > small {
   color: var(--text);
-  font-size: 11px;
+  font-size: 16px;
   white-space: nowrap;
 }
 
@@ -1167,7 +1167,7 @@
 .science-item-info strong {
   overflow: hidden;
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 16px;
   text-overflow: ellipsis;
 }
 
@@ -1175,7 +1175,7 @@
 .science-item-actions > small {
   margin-top: 3px;
   color: #7694a1;
-  font-size: 11px;
+  font-size: 16px;
   line-height: 1.3;
 }
 
@@ -1198,7 +1198,7 @@
   border: 1px solid var(--line);
   border-radius: 6px;
   color: var(--text);
-  font-size: 11px;
+  font-size: 16px;
   text-align: center;
 }
 
@@ -1252,7 +1252,7 @@
 
 .science-slot-number {
   color: var(--cyan);
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.08em;
 }
@@ -1263,7 +1263,7 @@
   overflow: hidden;
   color: var(--text);
   font-family: var(--font-display);
-  font-size: 11px;
+  font-size: 16px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1271,7 +1271,7 @@
 .science-slot small {
   margin-top: 3px;
   color: #7694a1;
-  font-size: 11px;
+  font-size: 16px;
   line-height: 1.3;
 }
 
@@ -1282,7 +1282,7 @@
 
 .science-slot-empty > span {
   color: #8ca9b7;
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 700;
 }
 
@@ -1302,7 +1302,7 @@
   gap: 4px;
   margin-top: 4px;
   color: #9dcbd6;
-  font-size: 11px;
+  font-size: 16px;
 }
 
 .science-detail {
@@ -1320,7 +1320,7 @@
 .science-detail > p {
   margin-top: 8px;
   color: #a1bbc5;
-  font-size: 11px;
+  font-size: 16px;
   line-height: 1.5;
 }
 
@@ -1338,7 +1338,7 @@
   gap: 6px;
   margin-top: 10px;
   color: var(--cyan);
-  font-size: 11px;
+  font-size: 16px;
   text-decoration: none;
 }
 
@@ -1427,12 +1427,12 @@
 
 .component-card-title strong {
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: 16px;
 }
 
 .component-card-title small {
   color: var(--muted);
-  font-size: 11px;
+  font-size: 16px;
 }
 
 .component-card-stats {
@@ -1445,7 +1445,7 @@
   align-items: center;
   gap: 4px;
   color: #7895a4;
-  font-size: 11px;
+  font-size: 16px;
 }
 
 .selection-mark {
@@ -1596,7 +1596,7 @@
   background: rgb(3 16 24 / 74%);
   color: #6ec7d9;
   font-family: monospace;
-  font-size: 11px;
+  font-size: 16px;
 }
 
 .node-a {
@@ -1636,14 +1636,14 @@
 .detail-copy > p {
   margin-top: 9px;
   color: #8da8b5;
-  font-size: clamp(11px, 1.1vw, 13px);
+  font-size: 16px;
   line-height: 1.55;
 }
 
 .detail-explanation {
   margin-top: 5px;
   color: #718e9b;
-  font-size: 11px;
+  font-size: 16px;
   line-height: 1.45;
 }
 
@@ -1664,7 +1664,7 @@
 
 .detail-stats dt {
   color: #5f7d8b;
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.08em;
 }
@@ -1672,7 +1672,7 @@
 .detail-stats dd {
   margin-top: 3px;
   font-family: var(--font-display);
-  font-size: 12px;
+  font-size: 16px;
   font-weight: 600;
 }
 
@@ -1688,7 +1688,7 @@
   align-items: center;
   gap: 6px;
   color: var(--cyan);
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.1em;
 }
@@ -1696,7 +1696,7 @@
 .nasa-fact p {
   margin-top: 6px;
   color: #a2bec9;
-  font-size: 11px;
+  font-size: 16px;
   line-height: 1.45;
 }
 
@@ -1704,18 +1704,18 @@
   display: block;
   margin-top: 5px;
   color: #506b77;
-  font-size: 11px;
+  font-size: 16px;
 }
 
 .review-science-selection {
   margin: 0 0 12px;
   color: #7e9ba8;
-  font-size: 11px;
+  font-size: 16px;
 }
 
 .review-science-selection strong {
   color: var(--cyan);
-  font-size: 11px;
+  font-size: 16px;
   letter-spacing: 0.08em;
 }
 
@@ -1753,7 +1753,7 @@
   border-radius: var(--radius-sm);
   background: rgb(12 35 47 / 66%);
   color: #9eb8c3;
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 700;
 }
 
@@ -1848,13 +1848,13 @@
 .selected-systems small {
   margin-top: 5px;
   color: #587887;
-  font-size: 11px;
+  font-size: 16px;
   text-transform: uppercase;
 }
 
 .selected-systems strong {
   overflow: hidden;
-  font-size: 11px;
+  font-size: 16px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1878,7 +1878,7 @@
   align-items: center;
   gap: 7px;
   color: var(--cyan);
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.1em;
 }
@@ -1892,7 +1892,7 @@
 .summary-destination small {
   margin-top: 5px;
   color: var(--muted);
-  font-size: 11px;
+  font-size: 16px;
   line-height: 1.45;
 }
 
@@ -1922,7 +1922,7 @@
 
 .summary-metrics small {
   color: #5e7b88;
-  font-size: 11px;
+  font-size: 16px;
 }
 
 .board-status {
@@ -1963,18 +1963,18 @@
 
 .board-status small {
   color: #6d8a97;
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 700;
   letter-spacing: 0.08em;
 }
 
 .board-status strong {
-  font-size: 11px;
+  font-size: 16px;
 }
 
 .board-status p {
   color: #6f8a96;
-  font-size: 11px;
+  font-size: 16px;
 }
 
 .results-screen {
@@ -2067,7 +2067,7 @@
   max-width: 420px;
   margin: 13px auto 0;
   color: #829eaa;
-  font-size: 12px;
+  font-size: 16px;
   line-height: 1.55;
 }
 
@@ -2091,7 +2091,7 @@
 
 .result-score small {
   color: #5d7c89;
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 700;
 }
 
@@ -2118,13 +2118,13 @@
 }
 
 .result-learning strong {
-  font-size: 11px;
+  font-size: 16px;
 }
 
 .result-learning p {
   margin-top: 3px;
   color: #7593a0;
-  font-size: 11px;
+  font-size: 16px;
   line-height: 1.4;
 }
 
@@ -2152,7 +2152,7 @@
   gap: 7px;
   margin: 0 0 12px;
   color: var(--green);
-  font-size: 11px;
+  font-size: 16px;
 }
 
 .result-loadout {
@@ -2169,13 +2169,13 @@
 
 .result-loadout strong {
   color: var(--cyan);
-  font-size: 11px;
+  font-size: 16px;
   letter-spacing: 0.08em;
 }
 
 .result-loadout span {
   color: #8ca9b7;
-  font-size: 11px;
+  font-size: 16px;
   line-height: 1.4;
 }
 
@@ -2217,7 +2217,7 @@
   }
 
   .build-status-card > span {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .build-status-card > strong {
@@ -2225,7 +2225,7 @@
   }
 
   .build-status-card > small {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .mission-card {
@@ -2287,7 +2287,7 @@
   }
 
   .science-item-info strong {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .science-mission-list {
@@ -2299,12 +2299,12 @@
     flex-direction: column;
     gap: 4px;
     padding: 6px;
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .science-list-heading > strong,
   .science-list-heading > small {
-    font-size: 11px;
+    font-size: 16px;
     text-align: left;
   }
 
@@ -2314,15 +2314,15 @@
   }
 
   .science-slot strong {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .science-slot small {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .science-slot button {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .component-card {
@@ -2467,7 +2467,7 @@
 
   .science-item-info small,
   .science-item-actions > small {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .science-move-button {
@@ -2489,12 +2489,12 @@
     gap: 3px;
     margin-bottom: 5px;
     padding: 5px;
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .science-list-heading > strong,
   .science-list-heading > small {
-    font-size: 11px;
+    font-size: 16px;
     text-align: left;
   }
 
@@ -2504,11 +2504,11 @@
   }
 
   .science-detail h2 {
-    font-size: 14px;
+    font-size: 16px;
   }
 
   .science-detail > p {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .science-detail .detail-stats {
@@ -2525,11 +2525,11 @@
   }
 
   .science-source {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .mission-theme {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .build-status {
@@ -2543,7 +2543,7 @@
   .build-status-card > span {
     align-items: flex-start;
     gap: 3px;
-    font-size: 11px;
+    font-size: 16px;
     letter-spacing: 0.03em;
   }
 
@@ -2553,11 +2553,11 @@
   }
 
   .build-status-card > strong {
-    font-size: 15px;
+    font-size: 16px;
   }
 
   .build-status-card > small {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .context-content {
@@ -2580,7 +2580,7 @@
 
   .context-heading > p {
     margin-top: 11px;
-    font-size: 11px;
+    font-size: 16px;
     line-height: 1.5;
   }
 
@@ -2597,7 +2597,7 @@
   }
 
   .story-transmission p {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .context-challenge {
@@ -2605,7 +2605,7 @@
   }
 
   .context-challenge p {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .context-visual .mission-orb {
@@ -2631,7 +2631,7 @@
 
   .context-target strong {
     padding-right: 0;
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .context-target small {
@@ -2650,7 +2650,7 @@
   }
 
   .context-metrics dt {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .context-metrics dt svg {
@@ -2658,7 +2658,7 @@
   }
 
   .context-metrics dd {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .stage-copy {
@@ -2702,7 +2702,7 @@
 
   .stage-nav-card > span {
     width: auto;
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .component-layout {
@@ -2730,11 +2730,11 @@
   }
 
   .component-card-title strong {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .component-card-title small {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .component-card-stats {
@@ -2762,7 +2762,7 @@
   }
 
   .detail-type {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .detail-copy h2 {
@@ -2785,7 +2785,7 @@
   }
 
   .detail-stats dd {
-    font-size: 11px;
+    font-size: 16px;
     line-height: 1.3;
   }
 
@@ -2794,16 +2794,16 @@
   }
 
   .nasa-fact > span {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .nasa-fact p {
-    font-size: 11px;
+    font-size: 16px;
     line-height: 1.45;
   }
 
   .nasa-fact small {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .bottom-actions {
@@ -2815,7 +2815,7 @@
     min-width: 0;
     height: 40px;
     padding: 0 13px;
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .review-layout {
@@ -2852,7 +2852,7 @@
   }
 
   .selected-systems strong {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .mission-summary {
@@ -2860,7 +2860,7 @@
   }
 
   .summary-destination strong {
-    font-size: 13px;
+    font-size: 16px;
   }
 
   .summary-destination small {
@@ -2881,7 +2881,7 @@
   }
 
   .summary-metrics strong {
-    font-size: 12px;
+    font-size: 16px;
   }
 
   .board-status {
@@ -2894,7 +2894,7 @@
   }
 
   .board-status strong {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .results-card {
@@ -2906,7 +2906,7 @@
   }
 
   .result-score strong {
-    font-size: 13px;
+    font-size: 16px;
   }
 
   .result-score {
@@ -3024,19 +3024,19 @@
 
   .kicker,
   .detail-type {
-    font-size: 12px;
+    font-size: 16px;
   }
 
   .mission-card-top,
   .mission-facts span,
   .carousel-controls span {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .mission-card-copy > p,
   .mission-card-copy > button,
   .next-action {
-    font-size: 13px;
+    font-size: 16px;
   }
 
   .story-transmission small,
@@ -3044,20 +3044,20 @@
   .context-target span,
   .context-target small,
   .context-metrics dt {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .story-transmission p,
   .context-challenge p {
-    font-size: 13px;
+    font-size: 16px;
   }
 
   .context-metrics dd {
-    font-size: 14px;
+    font-size: 16px;
   }
 
   .stage-nav-card > span {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .stage-copy > p {
@@ -3076,19 +3076,19 @@
 
   .component-card-title small {
     margin-top: 3px;
-    font-size: 13px;
+    font-size: 16px;
     line-height: 1.35;
   }
 
   .component-card-stats small {
-    font-size: 12px;
+    font-size: 16px;
   }
 
   .data-node,
   .detail-stats dt,
   .nasa-fact > span,
   .nasa-fact small {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .detail-copy {
@@ -3103,16 +3103,16 @@
   }
 
   .nasa-fact p {
-    font-size: 13px;
+    font-size: 16px;
   }
 
   .detail-stats dd {
-    font-size: 14px;
+    font-size: 16px;
   }
 
   .back-action,
   .results-card .result-buttons > button {
-    font-size: 12px;
+    font-size: 16px;
   }
 
   .selected-systems small,
@@ -3120,7 +3120,7 @@
   .summary-metrics span,
   .board-status small,
   .result-score small {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .selected-systems strong,
@@ -3128,22 +3128,22 @@
   .summary-metrics small,
   .board-status p,
   .result-learning p {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .board-status strong,
   .result-learning strong {
-    font-size: 13px;
+    font-size: 16px;
   }
 
   .results-card > p {
-    font-size: 14px;
+    font-size: 16px;
   }
 }
 
 @media (max-width: 680px) {
   p {
-    font-size: 14px !important;
+    font-size: 16px !important;
   }
 
   .carousel-intro h1 {
@@ -3172,25 +3172,25 @@
   }
 
   .kicker {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .mission-card-top,
   .mission-facts span,
   .carousel-controls span {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .mission-card-copy > p,
   .mission-card-copy > button,
   .next-action {
-    font-size: 12px;
+    font-size: 16px;
   }
 
   .context-heading > p,
   .story-transmission p,
   .context-challenge p {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .story-transmission small,
@@ -3198,12 +3198,12 @@
   .context-target span,
   .context-target small,
   .context-metrics dt {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .context-target strong,
   .context-metrics dd {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .stage-nav-card > span,
@@ -3212,26 +3212,26 @@
   .detail-stats dt,
   .nasa-fact > span,
   .nasa-fact small {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .stage-copy > p {
-    font-size: 13px;
+    font-size: 16px;
   }
 
   .component-card-title strong {
-    font-size: 13px;
+    font-size: 16px;
     line-height: 1.2;
   }
 
   .component-card-title small {
     margin-top: 2px;
-    font-size: 11px;
+    font-size: 16px;
     line-height: 1.25;
   }
 
   .detail-stats dd {
-    font-size: 12px;
+    font-size: 16px;
   }
 
   .detail-copy {
@@ -3240,12 +3240,12 @@
   }
 
   .detail-copy > p {
-    font-size: 12px;
+    font-size: 16px;
     line-height: 1.55;
   }
 
   .nasa-fact p {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .back-action,
@@ -3256,23 +3256,23 @@
   .board-status p,
   .result-score small,
   .result-learning p {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .selected-systems small,
   .summary-destination span,
   .summary-metrics span,
   .board-status small {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .board-status strong,
   .result-learning strong {
-    font-size: 11px;
+    font-size: 16px;
   }
 
   .results-card > p {
-    font-size: 13px;
+    font-size: 16px;
   }
 }
 
@@ -3284,5 +3284,215 @@
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+  }
+}
+
+:root {
+  --muted: #9ab2be;
+}
+
+.carousel-intro p,
+.stage-copy p,
+.review-intro p,
+.mission-card-copy > p,
+.context-heading > p,
+.story-transmission p,
+.context-challenge p,
+.detail-copy > p,
+.detail-explanation,
+.nasa-fact p,
+.science-detail > p,
+.review-science-selection,
+.summary-destination small,
+.board-status p,
+.results-card > p,
+.result-learning p {
+  color: #b1c6cf;
+  font-size: 16px;
+  line-height: 1.6;
+}
+
+.mission-theme,
+.mission-facts span,
+.build-status-card > span,
+.build-status-card > small,
+.stage-nav-card > span,
+.science-list-heading > small,
+.science-item-info small,
+.science-item-actions > small,
+.science-slot small,
+.science-detail .detail-stats dt,
+.science-source,
+.component-card-title small,
+.component-card-stats small,
+.detail-stats dt,
+.nasa-fact small,
+.back-action,
+.bottom-actions .next-action,
+.selected-systems small,
+.selected-systems strong,
+.summary-destination span,
+.summary-metrics span,
+.summary-metrics small,
+.board-status small,
+.board-status strong,
+.result-score small,
+.result-learning strong,
+.result-loadout span {
+  font-size: 16px;
+}
+
+.mission-theme,
+.mission-facts span,
+.build-status-card > span,
+.build-status-card > small,
+.stage-nav-card > span,
+.science-list-heading > small,
+.science-item-info small,
+.science-item-actions > small,
+.science-slot small,
+.component-card-title small,
+.component-card-stats small,
+.detail-stats dt,
+.nasa-fact small,
+.selected-systems small,
+.summary-destination span,
+.summary-metrics span,
+.summary-metrics small,
+.board-status small,
+.result-score small {
+  color: #9ab4c0;
+}
+
+.story-transmission small,
+.context-challenge span,
+.context-target span,
+.context-target small,
+.context-metrics dt,
+.science-list-heading,
+.science-item-info strong,
+.science-item-actions > strong,
+.science-slot strong,
+.science-slot-empty > span,
+.science-slot button,
+.science-detail h2,
+.science-detail .detail-stats dd,
+.science-source,
+.component-card-title strong,
+.detail-stats dd,
+.nasa-fact > span,
+.summary-destination strong,
+.summary-metrics strong,
+.result-score strong,
+.result-learning strong,
+.result-loadout strong {
+  font-size: 16px;
+}
+
+.story-transmission p,
+.context-challenge p,
+.science-detail > p,
+.nasa-fact p,
+.detail-copy > p,
+.detail-explanation,
+.science-source,
+.review-science-selection,
+.summary-destination small,
+.board-status p,
+.result-learning p,
+.result-loadout span {
+  color: #b1c6cf;
+}
+
+.mission-card-copy > button,
+.next-action,
+.back-action,
+.results-card .result-buttons > button {
+  font-size: 16px;
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.mission-card-copy > button:not(:disabled):hover,
+.next-action:not(:disabled):hover,
+.back-action:hover,
+.results-card .result-buttons > button:hover {
+  box-shadow: 0 12px 30px rgb(26 173 203 / 24%);
+  transform: translateY(-2px);
+}
+
+.missions-screen,
+.context-screen,
+.build-screen,
+.review-screen,
+.results-screen {
+  animation: page-enter 420ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+
+.mission-card,
+.component-card,
+.science-item-card,
+.science-slot {
+  animation: item-enter 380ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
+}
+
+.mission-card:nth-child(2),
+.component-card:nth-child(2),
+.science-item-card:nth-child(2),
+.science-slot:nth-child(2) {
+  animation-delay: 45ms;
+}
+
+.mission-card:nth-child(3),
+.component-card:nth-child(3),
+.science-item-card:nth-child(3),
+.science-slot:nth-child(3) {
+  animation-delay: 90ms;
+}
+
+.mission-card:nth-child(4),
+.component-card:nth-child(4),
+.science-item-card:nth-child(4),
+.science-slot:nth-child(4) {
+  animation-delay: 135ms;
+}
+
+.science-item-card,
+.science-slot-filled {
+  transition:
+    transform 180ms ease,
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.science-item-card:hover,
+.science-slot-filled:hover {
+  border-color: var(--line-bright);
+  box-shadow: 0 8px 20px rgb(0 0 0 / 18%);
+  transform: translateY(-2px);
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes item-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

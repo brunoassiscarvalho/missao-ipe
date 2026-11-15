@@ -35,7 +35,15 @@ import {
   type DragEvent,
   type SetStateAction,
 } from "react";
-import { BrowserRouter, Navigate, Route, Routes, useNavigate, useParams } from "react-router";
+import {
+  BrowserRouter,
+  Navigate,
+  Route,
+  Routes,
+  useLocation,
+  useNavigate,
+  useParams,
+} from "react-router";
 
 type Mission = {
   id: string;
@@ -2226,6 +2234,7 @@ function ResultsScreen({
 
 function Game() {
   const [engineer, setEngineer] = useState<EngineerState>(loadEngineerState);
+  const location = useLocation();
 
   useEffect(() => {
     try {
@@ -2236,7 +2245,7 @@ function Game() {
   }, [engineer]);
 
   return (
-    <Routes>
+    <Routes key={location.pathname}>
       <Route
         path="/"
         element={
