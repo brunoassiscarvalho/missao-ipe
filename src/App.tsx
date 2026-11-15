@@ -37,8 +37,10 @@ type Mission = {
   destination: string;
   objective: string;
   payload: string;
+  payloadKg: number;
   distance: string;
   duration: string;
+  baseDays: number;
   reward: string;
   color: string;
   story: {
@@ -57,10 +59,15 @@ type ComponentOption = {
   subtitle: string;
   description: string;
   fact: string;
+  rule: string;
   mass: number;
   cost: number;
   energy: number;
   reliability: number;
+  cargoCapacity?: number;
+  daysFactor?: number;
+  scienceModifier?: number;
+  energyMode?: "geradas" | "armazenadas" | "geradas/armazenadas";
   statLabel: string;
   statValue: string;
 };
@@ -83,8 +90,10 @@ const missions: Mission[] = [
     destination: "Estação Espacial Internacional",
     objective: "Entregar um monitor atmosférico de alta precisão à tripulação da ISS.",
     payload: "120 kg",
+    payloadKg: 120,
     distance: "400 km",
     duration: "30 dias",
+    baseDays: 30,
     reward: "450 XP",
     color: "cyan",
     story: {
@@ -107,8 +116,10 @@ const missions: Mission[] = [
     destination: "Polo Sul da Lua",
     objective: "Transportar um espectrômetro para mapear depósitos de gelo lunar.",
     payload: "240 kg",
+    payloadKg: 240,
     distance: "384 mil km",
     duration: "48 dias",
+    baseDays: 48,
     reward: "780 XP",
     color: "violet",
     story: {
@@ -131,8 +142,10 @@ const missions: Mission[] = [
     destination: "Cratera Jezero, Marte",
     objective: "Levar uma estação meteorológica autônoma para a superfície marciana.",
     payload: "460 kg",
+    payloadKg: 460,
     distance: "225 mi km",
     duration: "210 dias",
+    baseDays: 210,
     reward: "1.240 XP",
     color: "orange",
     story: {
@@ -155,8 +168,10 @@ const missions: Mission[] = [
     destination: "Europa, Júpiter",
     objective: "Inserir uma sonda de análise na órbita da lua congelada.",
     payload: "780 kg",
+    payloadKg: 780,
     distance: "628 mi km",
     duration: "5,5 anos",
+    baseDays: 2008,
     reward: "2.100 XP",
     color: "blue",
     story: {
@@ -179,8 +194,10 @@ const missions: Mission[] = [
     destination: "Asteroide Bennu",
     objective: "Coletar uma amostra do asteroide e devolvê-la com integridade à Terra.",
     payload: "1.050 kg",
+    payloadKg: 1050,
     distance: "2,1 bi km",
     duration: "7 anos",
+    baseDays: 2555,
     reward: "3.400 XP",
     color: "pink",
     story: {
@@ -211,11 +228,13 @@ const componentGroups: ComponentGroup[] = [
         subtitle: "Classe média reutilizável",
         description:
           "Um lançador de dois estágios com primeiro estágio reutilizável. Sua capacidade excede a necessidade da carga e oferece boa margem operacional.",
-        fact: "A NASA usa o Falcon 9 em missões de reabastecimento comercial para a ISS.",
+        fact: "O Falcon 9 tem dois estágios e o primeiro pode ser reutilizado. A SpaceX realiza voos de reabastecimento da NASA à ISS com esse veículo.",
+        rule: "A carga deve caber no limite do veículo. Sua massa entra no total da nave e pode aumentar os dias de viagem.",
         mass: 549,
         cost: 6.2,
         energy: 8,
         reliability: 96,
+        cargoCapacity: 22800,
         statLabel: "Carga para LEO",
         statValue: "22.800 kg",
       },
@@ -225,11 +244,13 @@ const componentGroups: ComponentGroup[] = [
         subtitle: "Lançador leve",
         description:
           "Solução compacta para cargas pequenas em órbita baixa. Reduz o custo, mas deixa pouca margem para sistemas redundantes.",
-        fact: "Veículos leves são usados para CubeSats e pequenos experimentos em órbita terrestre.",
+        fact: "O Atlas L-2 é um veículo didático fictício; lançadores leves reais, como o Electron, colocam pequenos satélites em órbita.",
+        rule: "A carga deve caber no limite de 820 kg. A menor massa reduz o efeito do peso no tempo de viagem.",
         mass: 360,
         cost: 4.8,
         energy: 6,
         reliability: 87,
+        cargoCapacity: 820,
         statLabel: "Carga para LEO",
         statValue: "820 kg",
       },
@@ -239,11 +260,13 @@ const componentGroups: ComponentGroup[] = [
         subtitle: "Classe pesada",
         description:
           "Grande capacidade e estágio superior de longa duração. É robusto, mas consome uma parcela maior do orçamento.",
-        fact: "Estágios superiores criogênicos usam oxigênio e hidrogênio líquidos para alta eficiência.",
+        fact: "O estágio superior Centaur V usa hidrogênio e oxigênio líquidos, propelentes criogênicos de alto desempenho.",
+        rule: "A carga deve caber no limite de 27.200 kg. A massa maior entra no cálculo do tempo de viagem.",
         mass: 720,
         cost: 9.3,
         energy: 9,
         reliability: 98,
+        cargoCapacity: 27200,
         statLabel: "Carga para LEO",
         statValue: "27.200 kg",
       },
@@ -253,11 +276,13 @@ const componentGroups: ComponentGroup[] = [
         subtitle: "Microlançador",
         description:
           "O menor veículo disponível. É ágil e econômico, mas não comporta a cápsula e a carga desta missão.",
-        fact: "Microlançadores reduzem o tempo de espera por uma janela de lançamento compartilhada.",
+        fact: "O Electron, da Rocket Lab, é um lançador leve usado para colocar pequenos satélites em órbita dedicada.",
+        rule: "A carga deve caber no limite de 300 kg. Se exceder a capacidade do veículo, a missão não pode ser lançada.",
         mass: 300,
         cost: 3.7,
         energy: 5,
         reliability: 79,
+        cargoCapacity: 300,
         statLabel: "Carga para LEO",
         statValue: "300 kg",
       },
@@ -268,10 +293,12 @@ const componentGroups: ComponentGroup[] = [
         description:
           "Projetado para missões de carga em órbita baixa. Oferece bom volume interno para instrumentos científicos.",
         fact: "A família Antares lançou naves de carga Cygnus em missões de reabastecimento da ISS.",
+        rule: "A carga deve caber no limite de 10.500 kg. A massa do lançador também afeta a duração estimada da viagem.",
         mass: 610,
         cost: 7.4,
         energy: 8,
         reliability: 93,
+        cargoCapacity: 10500,
         statLabel: "Carga para LEO",
         statValue: "10.500 kg",
       },
@@ -281,11 +308,13 @@ const componentGroups: ComponentGroup[] = [
         subtitle: "Grande volume",
         description:
           "Coifa ampla e primeiro estágio reutilizável. Capacidade muito acima do necessário para esta missão.",
-        fact: "Coifas maiores permitem transportar instrumentos sem dobrar painéis e antenas.",
+        fact: "O New Glenn tem uma coifa de grande diâmetro e um primeiro estágio projetado para reutilização, permitindo levar cargas volumosas.",
+        rule: "A carga deve caber no limite de 45.000 kg. A capacidade excedente não reduz o custo de compra nem a massa do veículo.",
         mass: 790,
         cost: 10.1,
         energy: 10,
         reliability: 94,
+        cargoCapacity: 45000,
         statLabel: "Carga para LEO",
         statValue: "45.000 kg",
       },
@@ -305,10 +334,12 @@ const componentGroups: ComponentGroup[] = [
         description:
           "Combina combustível e oxidante líquidos para produzir alto empuxo. Ideal para correções rápidas e acoplamento orbital.",
         fact: "A equação de Tsiolkovsky relaciona a mudança de velocidade à massa de propelente.",
+        rule: "Alto empuxo encurta a viagem: multiplique os dias por 0,90. O sistema consome 4 unidades de energia.",
         mass: 128,
         cost: 1.8,
         energy: 4,
         reliability: 94,
+        daysFactor: 0.9,
         statLabel: "Impulso específico",
         statValue: "320 s",
       },
@@ -319,10 +350,12 @@ const componentGroups: ComponentGroup[] = [
         description:
           "Acelera íons com campos elétricos. Economiza propelente, mas seu baixo empuxo não é adequado para acoplamentos rápidos.",
         fact: "A missão Dawn da NASA usou propulsão iônica para visitar Vesta e Ceres.",
+        rule: "O baixo empuxo aumenta os dias de viagem: multiplique por 1,15. Consome 22 unidades de energia.",
         mass: 74,
         cost: 2.9,
         energy: 22,
         reliability: 86,
+        daysFactor: 1.15,
         statLabel: "Impulso específico",
         statValue: "3.100 s",
       },
@@ -332,11 +365,13 @@ const componentGroups: ComponentGroup[] = [
         subtitle: "Simples e confiável",
         description:
           "Usa um único propelente decomposto por catalisador. Tem menor desempenho, mas alta simplicidade operacional.",
-        fact: "Pequenos propulsores permitem controlar atitude e realizar ajustes precisos de órbita.",
+        fact: "A sonda Cassini usava propulsores monopropelentes de hidrazina para controlar sua orientação e trajetória.",
+        rule: "Propulsão simples mantém o tempo-base: multiplique os dias por 1,00. Consome 3 unidades de energia.",
         mass: 92,
         cost: 1.3,
         energy: 3,
         reliability: 97,
+        daysFactor: 1,
         statLabel: "Impulso específico",
         statValue: "230 s",
       },
@@ -356,10 +391,12 @@ const componentGroups: ComponentGroup[] = [
         description:
           "Células fotovoltaicas convertem luz solar em eletricidade. Em órbita baixa, períodos de sombra exigem baterias de apoio.",
         fact: "A ISS usa grandes painéis solares que acompanham o Sol durante a órbita.",
+        rule: "Gera 52 unidades de energia, que compensam o consumo dos outros sistemas. A energia restante deve ser de pelo menos 30 unidades.",
         mass: 112,
         cost: 2.1,
         energy: -52,
         reliability: 96,
+        energyMode: "geradas",
         statLabel: "Potência nominal",
         statValue: "4,8 kW",
       },
@@ -370,10 +407,12 @@ const componentGroups: ComponentGroup[] = [
         description:
           "Armazena energia suficiente para uma viagem curta. É simples, mas não oferece geração contínua.",
         fact: "Baterias de íons de lítio substituíram unidades antigas de níquel-hidrogênio na ISS.",
+        rule: "Acrescenta 29 unidades armazenadas à reserva; não gera energia continuamente. A energia restante deve ser de pelo menos 30 unidades.",
         mass: 82,
         cost: 1.2,
         energy: -29,
         reliability: 89,
+        energyMode: "armazenadas",
         statLabel: "Capacidade",
         statValue: "78 kWh",
       },
@@ -383,11 +422,13 @@ const componentGroups: ComponentGroup[] = [
         subtitle: "Solar e bateria",
         description:
           "Combina geração solar e armazenamento redundante. Aumenta massa e custo, mas garante energia durante eclipses orbitais.",
-        fact: "Uma órbita da ISS dura cerca de 90 minutos, alternando períodos de luz e sombra.",
+        fact: "Uma órbita da ISS dura cerca de 90 minutos; painéis solares e baterias mantêm os sistemas ativos durante os períodos de luz e sombra.",
+        rule: "Gera 64 unidades de energia e oferece a maior reserva; a energia restante deve ser de pelo menos 30 unidades.",
         mass: 148,
         cost: 2.8,
         energy: -64,
         reliability: 99,
+        energyMode: "geradas/armazenadas",
         statLabel: "Potência nominal",
         statValue: "6,2 kW",
       },
@@ -407,10 +448,13 @@ const componentGroups: ComponentGroup[] = [
         description:
           "Suporte rígido com isolamento térmico mínimo. Adequado apenas para cargas resistentes.",
         fact: "A vibração no lançamento pode danificar óptica e conexões de instrumentos sensíveis.",
+        rule: "A proteção básica reduz a capacidade científica em 12 pontos percentuais e aumenta os dias em 10% (×1,10).",
         mass: 42,
         cost: 0.6,
         energy: 0,
         reliability: 76,
+        daysFactor: 1.1,
+        scienceModifier: -12,
         statLabel: "Atenuação",
         statValue: "32%",
       },
@@ -421,10 +465,13 @@ const componentGroups: ComponentGroup[] = [
         description:
           "Amortecedores e sensores neutralizam oscilações durante o lançamento, protegendo instrumentos de alta precisão.",
         fact: "Testes de vibração em solo simulam as cargas mecânicas que o equipamento sofrerá.",
+        rule: "O isolamento ativo aumenta a capacidade científica em 5 pontos percentuais e reduz os dias em 5% (×0,95). Consome 3 unidades de energia.",
         mass: 94,
         cost: 1.7,
         energy: 3,
         reliability: 98,
+        daysFactor: 0.95,
+        scienceModifier: 5,
         statLabel: "Atenuação",
         statValue: "94%",
       },
@@ -435,10 +482,13 @@ const componentGroups: ComponentGroup[] = [
         description:
           "Camadas refletivas reduzem a troca de calor no vácuo e estabilizam a temperatura do instrumento.",
         fact: "As mantas douradas vistas em sondas são isolantes multicamada, não painéis solares.",
+        rule: "A manta multicamada reduz os dias em 5% (×0,95) e a capacidade científica em 2 pontos percentuais. Consome 1 unidade de energia.",
         mass: 67,
         cost: 1.1,
         energy: 1,
         reliability: 91,
+        daysFactor: 0.95,
+        scienceModifier: -2,
         statLabel: "Faixa térmica",
         statValue: "−80 a 120 °C",
       },
@@ -458,10 +508,12 @@ const componentGroups: ComponentGroup[] = [
         description:
           "Câmeras reconhecem padrões de estrelas para orientar a nave, enquanto a antena transmite telemetria.",
         fact: "Star trackers comparam imagens do céu com um catálogo estelar armazenado a bordo.",
+        rule: "A navegação de precisão mantém os dias-base (×1,00). O sistema consome 8 unidades de energia.",
         mass: 38,
         cost: 1.4,
         energy: 8,
         reliability: 96,
+        daysFactor: 1,
         statLabel: "Precisão angular",
         statValue: "0,01°",
       },
@@ -471,11 +523,13 @@ const componentGroups: ComponentGroup[] = [
         subtitle: "Leve e econômico",
         description:
           "Usa sinais de satélites de navegação para determinar posição e velocidade em órbita baixa.",
-        fact: "Receptores espaciais de GPS precisam compensar velocidades muito maiores que as terrestres.",
+        fact: "Receptores em órbita baixa podem usar sinais GPS para estimar posição e velocidade, com correções para o movimento orbital.",
+        rule: "O GPS orbital aumenta os dias em 5% (×1,05). O sistema consome 5 unidades de energia.",
         mass: 24,
         cost: 0.8,
         energy: 5,
         reliability: 89,
+        daysFactor: 1.05,
         statLabel: "Precisão de posição",
         statValue: "10 m",
       },
@@ -485,11 +539,13 @@ const componentGroups: ComponentGroup[] = [
         subtitle: "Máxima confiabilidade",
         description:
           "Combina star tracker, sensores solares e GPS. Continua operando mesmo após a falha de um subsistema.",
-        fact: "Redundância evita que uma única falha comprometa toda a missão.",
+        fact: "Sondas e naves da NASA usam componentes redundantes em sistemas críticos para lidar com falhas sem interromper toda a missão.",
+        rule: "A navegação redundante reduz os dias em 10% (×0,90), ao custo de maior massa e consumo. Usa 12 unidades de energia.",
         mass: 61,
         cost: 2.2,
         energy: 12,
         reliability: 99,
+        daysFactor: 0.9,
         statLabel: "Sistemas de apoio",
         statValue: "3× redundante",
       },
@@ -805,6 +861,7 @@ function BuildScreen({
   const selectedId = selection[group.id] ?? group.options[0].id;
   const selected = group.options.find((option) => option.id === selectedId) ?? group.options[0];
   const mission = missions.find((item) => item.id === missionId) ?? missions[0];
+  const metrics = useMemo(() => calculateMissionMetrics(mission, selection), [mission, selection]);
 
   const previous = () => {
     if (stepIndex === 0) navigate(`/mission/${missionId}/context`);
@@ -819,12 +876,15 @@ function BuildScreen({
   return (
     <main className="build-screen">
       <section className="build-content">
+        <BuildStatus metrics={metrics} />
         <div className="stage-copy">
-          <span className="kicker">
-            {mission.code} · ETAPA {stepIndex + 1} DE {componentGroups.length}
-          </span>
-          <h1>{group.name}</h1>
-          <p>{group.description}</p>
+          <div className="stage-heading">
+            <span className="kicker">
+              {mission.code} · ETAPA {stepIndex + 1} DE {componentGroups.length}
+            </span>
+            <h1>{group.name}</h1>
+            <p>{group.description}</p>
+          </div>
           <MissionStageNavigation mission={mission} currentStep={stepIndex} />
         </div>
 
@@ -869,13 +929,26 @@ function BuildScreen({
           <section className="component-detail" aria-live="polite">
             <ComponentVisual group={group} option={selected} />
             <div className="detail-copy">
-              <span className="detail-type">{group.shortName.toUpperCase()} SELECIONADO</span>
+              <span className="detail-type">DADO CIENTÍFICO · {group.shortName.toUpperCase()}</span>
               <h2>{selected.name}</h2>
-              <p>{selected.description}</p>
+              <p>{selected.fact}</p>
+              <small className="detail-explanation">{selected.description}</small>
               <dl className="detail-stats">
                 <div>
                   <dt>MASSA</dt>
                   <dd>{selected.mass} kg</dd>
+                </div>
+                <div>
+                  <dt>COMPRA FUTURA</dt>
+                  <dd>${selected.cost.toFixed(1)} mi</dd>
+                </div>
+                <div>
+                  <dt>ENERGIA</dt>
+                  <dd>
+                    {selected.energy < 0
+                      ? `${Math.abs(selected.energy)} unid. ${selected.energyMode ?? "geradas"}`
+                      : `${selected.energy} unid. consumidas`}
+                  </dd>
                 </div>
                 <div>
                   <dt>CONFIABILIDADE</dt>
@@ -885,13 +958,31 @@ function BuildScreen({
                   <dt>{selected.statLabel.toUpperCase()}</dt>
                   <dd>{selected.statValue}</dd>
                 </div>
+                {selected.daysFactor !== undefined && (
+                  <div>
+                    <dt>FATOR DE VIAGEM</dt>
+                    <dd>×{selected.daysFactor.toFixed(2)}</dd>
+                  </div>
+                )}
+                {selected.scienceModifier !== undefined && (
+                  <div>
+                    <dt>EFEITO CIENTÍFICO</dt>
+                    <dd>
+                      {selected.scienceModifier > 0 ? "+" : ""}
+                      {selected.scienceModifier} p.p.
+                    </dd>
+                  </div>
+                )}
               </dl>
               <aside className="nasa-fact">
                 <span>
-                  <Atom size={15} /> DADO DIDÁTICO
+                  <BookOpen size={15} /> REGRA DO JOGO
                 </span>
-                <p>{selected.fact}</p>
-                <small>Baseado em conceitos e missões publicados pela NASA.</small>
+                <p>{selected.rule}</p>
+                <small>
+                  Os valores numéricos são parâmetros do simulador; o texto principal apresenta o
+                  dado científico.
+                </small>
               </aside>
             </div>
           </section>
@@ -913,23 +1004,155 @@ function BuildScreen({
 
 type MissionMetrics = {
   mass: number;
-  cost: number;
+  equipmentCost: number;
+  operatingCost: number;
+  projectedCost: number;
+  remainingBudget: number;
+  days: number;
   energy: number;
   reliability: number;
-  integrity: number;
+  scienceCapacity: number;
+  efficiency: number;
+  payloadReady: boolean;
   ready: boolean;
 };
 
-function ReviewScreen({
-  selection,
-  metrics,
-}: {
-  selection: Record<string, string>;
-  metrics: MissionMetrics;
-}) {
+const MISSION_BUDGET = 15;
+const DAILY_OPERATING_COST = 0.0005;
+
+function calculateMissionMetrics(
+  mission: Mission,
+  selection: Record<string, string>,
+): MissionMetrics {
+  const selectedOptions = componentGroups.map(
+    (group) =>
+      group.options.find((option) => option.id === selection[group.id]) ?? group.options[0],
+  );
+  const vehicle = selectedOptions.find((option) => option.cargoCapacity !== undefined);
+  const protection = selectedOptions.find((option) => option.scienceModifier !== undefined);
+  const propulsion = componentGroups
+    .find((group) => group.id === "propulsion")!
+    .options.find((option) => option.id === selection.propulsion)!;
+  const navigation = componentGroups
+    .find((group) => group.id === "navigation")!
+    .options.find((option) => option.id === selection.navigation)!;
+
+  const mass = mission.payloadKg + selectedOptions.reduce((sum, option) => sum + option.mass, 0);
+  const equipmentCost = selectedOptions.reduce((sum, option) => sum + option.cost, 0);
+  const energyDraw = selectedOptions.reduce((sum, option) => sum + option.energy, 0);
+  const energy = Math.max(0, Math.min(99, 64 - energyDraw));
+  const reliability = Math.round(
+    selectedOptions.reduce((sum, option) => sum + option.reliability, 0) / selectedOptions.length,
+  );
+  const scienceCapacity = Math.max(
+    0,
+    Math.min(100, reliability + (protection?.scienceModifier ?? 0)),
+  );
+  const massFactor = 1 + Math.max(0, mass - 800) / 10000;
+  const days = Math.ceil(
+    mission.baseDays *
+      massFactor *
+      (propulsion.daysFactor ?? 1) *
+      (navigation.daysFactor ?? 1) *
+      (protection?.daysFactor ?? 1),
+  );
+  const operatingCost = days * DAILY_OPERATING_COST;
+  const projectedCost = equipmentCost + operatingCost;
+  const remainingBudget = MISSION_BUDGET - projectedCost;
+  const efficiency = scienceCapacity / projectedCost;
+  const payloadReady = (vehicle?.cargoCapacity ?? 0) >= mission.payloadKg;
+  const ready =
+    payloadReady &&
+    mass < 1800 &&
+    projectedCost <= MISSION_BUDGET &&
+    energy >= 30 &&
+    scienceCapacity >= 95 &&
+    efficiency >= 5;
+
+  return {
+    mass,
+    equipmentCost,
+    operatingCost,
+    projectedCost,
+    remainingBudget,
+    days,
+    energy,
+    reliability,
+    scienceCapacity,
+    efficiency,
+    payloadReady,
+    ready,
+  };
+}
+
+function formatBudget(value: number) {
+  return value < 0 ? `−$${Math.abs(value).toFixed(1)} mi` : `$${value.toFixed(1)} mi`;
+}
+
+function BuildStatus({ metrics }: { metrics: MissionMetrics }) {
+  return (
+    <section className="build-status" aria-label="Indicadores previstos da missão">
+      <div className="build-status-card">
+        <span>
+          <CircleDollarSign size={15} /> ORÇAMENTO PÓS-LANÇAMENTO
+        </span>
+        <strong>{formatBudget(metrics.remainingBudget)}</strong>
+        <div
+          className="build-status-track"
+          role="progressbar"
+          aria-label="Orçamento previsto"
+          aria-valuemin={0}
+          aria-valuemax={MISSION_BUDGET}
+          aria-valuenow={Math.min(metrics.projectedCost, MISSION_BUDGET)}
+        >
+          <i
+            data-over-budget={metrics.remainingBudget < 0}
+            style={{ width: `${Math.min((metrics.projectedCost / MISSION_BUDGET) * 100, 100)}%` }}
+          />
+        </div>
+        <small>
+          Hoje: ${MISSION_BUDGET.toFixed(1)} mi · Compra futura: ${metrics.equipmentCost.toFixed(1)}{" "}
+          mi
+        </small>
+      </div>
+      <div className="build-status-card">
+        <span>
+          <Atom size={15} /> CAPACIDADE CIENTÍFICA
+        </span>
+        <strong>{metrics.scienceCapacity}%</strong>
+        <div
+          className="build-status-track science"
+          role="progressbar"
+          aria-label="Capacidade científica estimada"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={metrics.scienceCapacity}
+        >
+          <i style={{ width: `${metrics.scienceCapacity}%` }} />
+        </div>
+        <small>Eficiência: {metrics.efficiency.toFixed(1)} p.p./US$ mi</small>
+      </div>
+      <div className="build-status-card">
+        <span>
+          <Clock3 size={15} /> DURAÇÃO DA MISSÃO
+        </span>
+        <strong>
+          {metrics.days.toLocaleString("pt-BR")} <small>dias</small>
+        </strong>
+        <div className="build-status-track">
+          <i style={{ width: `${Math.min((metrics.days / 2555) * 100, 100)}%` }} />
+        </div>
+        <small>Operação prevista: ${metrics.operatingCost.toFixed(3)} mi</small>
+      </div>
+    </section>
+  );
+}
+
+function ReviewScreen({ selection }: { selection: Record<string, string> }) {
   const navigate = useNavigate();
   const { missionId = "iss" } = useParams();
   const mission = missions.find((item) => item.id === missionId) ?? missions[0];
+  const metrics = calculateMissionMetrics(mission, selection);
 
   return (
     <main className="review-screen">
@@ -970,6 +1193,7 @@ function ReviewScreen({
               </span>
               <strong>{mission.destination}</strong>
               <small>{mission.objective}</small>
+              <small>{metrics.days.toLocaleString("pt-BR")} dias estimados</small>
             </div>
             <div className="summary-metrics">
               <div>
@@ -977,27 +1201,29 @@ function ReviewScreen({
                   <Weight size={16} /> MASSA TOTAL
                 </span>
                 <strong>{metrics.mass.toLocaleString("pt-BR")} kg</strong>
-                <small>Capacidade aprovada</small>
+                <small>
+                  {metrics.payloadReady ? "Carga cabe no veículo" : "Carga excede a capacidade"}
+                </small>
               </div>
               <div>
                 <span>
-                  <BatteryCharging size={16} /> ENERGIA
+                  <BatteryCharging size={16} /> RESERVA DE ENERGIA
                 </span>
-                <strong>{metrics.energy}%</strong>
-                <small>Reserva estimada</small>
+                <strong>{metrics.energy} unid.</strong>
+                <small>Meta: 30 unidades</small>
               </div>
               <div>
                 <span>
                   <CircleDollarSign size={16} /> CUSTO
                 </span>
-                <strong>${metrics.cost.toFixed(1)} mi</strong>
-                <small>Limite: $15 mi</small>
+                <strong>${metrics.projectedCost.toFixed(1)} mi</strong>
+                <small>Compra + operação · saldo: {formatBudget(metrics.remainingBudget)}</small>
               </div>
               <div>
                 <span>
-                  <ShieldCheck size={16} /> INTEGRIDADE
+                  <ShieldCheck size={16} /> CAPACIDADE CIENTÍFICA
                 </span>
-                <strong>{metrics.integrity}%</strong>
+                <strong>{metrics.scienceCapacity}%</strong>
                 <small>Meta: 95%</small>
               </div>
             </div>
@@ -1029,18 +1255,19 @@ function ReviewScreen({
 }
 
 function ResultsScreen({
-  metrics,
+  selection,
   onComplete,
 }: {
-  metrics: MissionMetrics;
-  onComplete: () => void;
+  selection: Record<string, string>;
+  onComplete: (ready: boolean) => void;
 }) {
   const navigate = useNavigate();
   const { missionId = "iss" } = useParams();
   const mission = missions.find((item) => item.id === missionId) ?? missions[0];
+  const metrics = calculateMissionMetrics(mission, selection);
 
   const finish = () => {
-    onComplete();
+    onComplete(metrics.ready);
     navigate("/");
   };
 
@@ -1059,17 +1286,22 @@ function ResultsScreen({
         <h1>{metrics.ready ? "Missão concluída" : "Sucesso parcial"}</h1>
         <p>
           {metrics.ready
-            ? "A carga foi acoplada à ISS e está operando dentro dos parâmetros científicos."
-            : "A carga chegou ao destino, mas parte dos objetivos científicos foi comprometida."}
+            ? `A missão chegou a ${mission.destination} e cumpriu os parâmetros científicos.`
+            : "A configuração não atingiu todos os critérios. Consulte os indicadores e reprojete a nave."}
         </p>
         <div className="result-score">
           <div>
-            <small>INTEGRIDADE</small>
-            <strong>{metrics.integrity}%</strong>
+            <small>CAPACIDADE CIENTÍFICA</small>
+            <strong>{metrics.scienceCapacity}%</strong>
           </div>
           <div>
-            <small>CONFIABILIDADE</small>
-            <strong>{metrics.reliability}%</strong>
+            <small>DIAS DE MISSÃO</small>
+            <strong>{metrics.days.toLocaleString("pt-BR")}</strong>
+          </div>
+          <div>
+            <small>PAGO NO LANÇAMENTO</small>
+            <strong>${metrics.projectedCost.toFixed(1)} mi</strong>
+            <small>Saldo: {formatBudget(metrics.remainingBudget)}</small>
           </div>
           <div>
             <small>EXPERIÊNCIA</small>
@@ -1104,30 +1336,6 @@ function Game() {
   const [unlockedLevel, setUnlockedLevel] = useState(1);
   const [selection, setSelection] = useState(initialSelection);
 
-  const selectedOptions = useMemo(
-    () =>
-      componentGroups.map(
-        (group) =>
-          group.options.find((option) => option.id === selection[group.id]) ?? group.options[0],
-      ),
-    [selection],
-  );
-
-  const metrics = useMemo<MissionMetrics>(() => {
-    const mass = 120 + selectedOptions.reduce((sum, option) => sum + option.mass, 0);
-    const cost = selectedOptions.reduce((sum, option) => sum + option.cost, 0);
-    const energyDraw = selectedOptions.reduce((sum, option) => sum + option.energy, 0);
-    const energy = Math.max(14, Math.min(99, 64 - energyDraw));
-    const reliability = Math.round(
-      selectedOptions.reduce((sum, option) => sum + option.reliability, 0) / selectedOptions.length,
-    );
-    const protection =
-      selection.protection === "damped" ? 5 : selection.protection === "thermal" ? -2 : -12;
-    const integrity = Math.min(99, Math.max(68, reliability + protection));
-    const ready = mass < 1800 && cost <= 15 && energy >= 30 && integrity >= 95;
-    return { mass, cost, energy, reliability, integrity, ready };
-  }, [selectedOptions, selection.protection]);
-
   return (
     <Routes>
       <Route path="/" element={<MissionsScreen unlockedLevel={unlockedLevel} />} />
@@ -1143,16 +1351,13 @@ function Game() {
           />
         }
       />
-      <Route
-        path="/mission/:missionId/review"
-        element={<ReviewScreen selection={selection} metrics={metrics} />}
-      />
+      <Route path="/mission/:missionId/review" element={<ReviewScreen selection={selection} />} />
       <Route
         path="/mission/:missionId/results"
         element={
           <ResultsScreen
-            metrics={metrics}
-            onComplete={() => metrics.ready && setUnlockedLevel((level) => Math.min(5, level + 1))}
+            selection={selection}
+            onComplete={(ready) => ready && setUnlockedLevel((level) => Math.min(5, level + 1))}
           />
         }
       />

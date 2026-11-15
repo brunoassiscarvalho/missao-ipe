@@ -731,8 +731,93 @@
   padding: clamp(26px, 5vh, 54px) 0 24px;
 }
 
+.build-content {
+  min-width: 0;
+  grid-template-rows: auto auto minmax(0, 1fr);
+}
+
+.build-status {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.build-status-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  padding: 10px 13px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgb(13 39 53 / 90%), rgb(5 19 29 / 92%));
+}
+
+.build-status-card > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #8ca9b7;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.build-status-card > span svg {
+  flex: 0 0 auto;
+  color: var(--cyan);
+}
+
+.build-status-card > strong {
+  margin-top: 5px;
+  font-family: var(--font-display);
+  font-size: 20px;
+  line-height: 1.1;
+}
+
+.build-status-card > strong small {
+  color: #91aab5;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.build-status-card > small {
+  margin-top: 5px;
+  color: #718e9b;
+  font-size: 9px;
+  line-height: 1.3;
+}
+
+.build-status-track {
+  height: 4px;
+  margin-top: 7px;
+  overflow: hidden;
+  border-radius: 99px;
+  background: rgb(113 147 162 / 17%);
+}
+
+.build-status-track i {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #1d9cb7, var(--cyan));
+  box-shadow: 0 0 9px rgb(72 221 245 / 45%);
+}
+
+.build-status-track i[data-over-budget="true"] {
+  background: linear-gradient(90deg, #c44f5d, var(--danger));
+  box-shadow: 0 0 9px rgb(255 108 120 / 45%);
+}
+
+.build-status-track.science i {
+  background: linear-gradient(90deg, #2d9d80, var(--green));
+  box-shadow: 0 0 9px rgb(85 224 181 / 40%);
+}
+
 .stage-copy {
   position: relative;
+  min-width: 0;
   min-height: 68px;
   padding-right: min(57vw, 690px);
 }
@@ -1166,8 +1251,11 @@
   display: flex;
   min-height: 0;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-start;
+  overflow-y: auto;
   padding: clamp(20px, 3vw, 38px);
+  scrollbar-color: var(--cyan-soft) transparent;
+  scrollbar-width: thin;
 }
 
 .detail-copy h2 {
@@ -1183,6 +1271,13 @@
   color: #8da8b5;
   font-size: clamp(10px, 1.1vw, 13px);
   line-height: 1.55;
+}
+
+.detail-explanation {
+  margin-top: 5px;
+  color: #718e9b;
+  font-size: 10px;
+  line-height: 1.45;
 }
 
 .detail-stats {
@@ -1589,7 +1684,7 @@
 
 .result-score {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   margin: 24px 0 15px;
   border: 1px solid var(--line);
   border-radius: 12px;
@@ -1690,6 +1785,26 @@
 }
 
 @media (max-width: 900px) {
+  .build-status {
+    gap: 7px;
+  }
+
+  .build-status-card {
+    padding: 9px;
+  }
+
+  .build-status-card > span {
+    font-size: 8px;
+  }
+
+  .build-status-card > strong {
+    font-size: 17px;
+  }
+
+  .build-status-card > small {
+    font-size: 8px;
+  }
+
   .mission-card {
     width: min(72vw, 390px);
     flex-basis: min(72vw, 390px);
@@ -1760,13 +1875,6 @@
     padding: 17px;
   }
 
-  .nasa-fact p {
-    display: -webkit-box;
-    overflow: hidden;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 2;
-  }
-
   .review-layout {
     grid-template-columns: 1fr 1fr;
   }
@@ -1811,6 +1919,39 @@
     width: calc(100% - 24px);
     gap: 12px;
     padding: 18px 0 12px;
+  }
+
+  .build-content {
+    grid-template-rows: auto auto minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .build-status {
+    gap: 5px;
+  }
+
+  .build-status-card {
+    padding: 7px;
+  }
+
+  .build-status-card > span {
+    align-items: flex-start;
+    gap: 3px;
+    font-size: 7px;
+    letter-spacing: 0.03em;
+  }
+
+  .build-status-card > span svg {
+    width: 12px;
+    height: 12px;
+  }
+
+  .build-status-card > strong {
+    font-size: 15px;
+  }
+
+  .build-status-card > small {
+    font-size: 7px;
   }
 
   .context-content {
@@ -1934,6 +2075,7 @@
     position: static;
     display: flex;
     width: 100%;
+    min-width: 0;
     gap: 6px;
     margin-top: 12px;
     overflow-x: auto;
@@ -1958,7 +2100,7 @@
   }
 
   .component-layout {
-    grid-template-columns: 42% 58%;
+    grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
     gap: 7px;
   }
 
@@ -2009,7 +2151,8 @@
   .detail-copy {
     justify-content: flex-start;
     padding: 12px;
-    overflow: hidden;
+    overflow-y: auto;
+    scrollbar-width: thin;
   }
 
   .detail-type {
@@ -2022,12 +2165,8 @@
   }
 
   .detail-copy > p {
-    display: -webkit-box;
-    overflow: hidden;
     margin-top: 5px;
-    font-size: 8px;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: 3;
+    line-height: 1.45;
   }
 
   .detail-stats {
@@ -2039,12 +2178,9 @@
     padding: 7px 3px;
   }
 
-  .detail-stats div:last-child {
-    display: none;
-  }
-
   .detail-stats dd {
     font-size: 9px;
+    line-height: 1.3;
   }
 
   .nasa-fact {
@@ -2057,11 +2193,11 @@
 
   .nasa-fact p {
     font-size: 7px;
-    -webkit-line-clamp: 2;
+    line-height: 1.45;
   }
 
   .nasa-fact small {
-    display: none;
+    font-size: 7px;
   }
 
   .bottom-actions {
@@ -2165,6 +2301,19 @@
 
   .result-score strong {
     font-size: 13px;
+  }
+
+  .result-score {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .result-score > div:nth-child(3) {
+    border-top: 1px solid var(--line);
+    border-left: 0;
+  }
+
+  .result-score > div:nth-child(4) {
+    border-top: 1px solid var(--line);
   }
 
   .result-buttons {
