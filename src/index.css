@@ -2236,6 +2236,291 @@
   }
 }
 
+/* Legibilidade: mantém textos operacionais e didáticos acima dos tamanhos decorativos. */
+@media (min-width: 681px) {
+  p {
+    font-size: 16px !important;
+  }
+
+  .carousel-intro h1 {
+    font-size: clamp(26px, 3vw, 40px);
+  }
+
+  .context-heading h1 {
+    font-size: clamp(28px, 3.4vw, 46px);
+  }
+
+  .stage-copy h1,
+  .review-intro h1 {
+    font-size: clamp(24px, 2.6vw, 34px);
+  }
+
+  .results-card h1 {
+    font-size: clamp(26px, 3vw, 38px);
+  }
+
+  .mission-card-copy h2 {
+    font-size: clamp(18px, 1.6vw, 23px);
+  }
+
+  .detail-copy h2 {
+    font-size: clamp(19px, 2vw, 27px);
+  }
+
+  .kicker,
+  .detail-type {
+    font-size: 12px;
+  }
+
+  .mission-card-top,
+  .mission-facts span,
+  .carousel-controls span {
+    font-size: 11px;
+  }
+
+  .mission-card-copy > p,
+  .mission-card-copy > button,
+  .next-action {
+    font-size: 13px;
+  }
+
+  .story-transmission small,
+  .context-challenge span,
+  .context-target span,
+  .context-target small,
+  .context-metrics dt {
+    font-size: 10px;
+  }
+
+  .story-transmission p,
+  .context-challenge p {
+    font-size: 13px;
+  }
+
+  .context-metrics dd {
+    font-size: 14px;
+  }
+
+  .stage-nav-card > span {
+    font-size: 10px;
+  }
+
+  .stage-copy > p {
+    font-size: 17px;
+    line-height: 1.5;
+  }
+
+  .component-card {
+    min-height: 154px;
+  }
+
+  .component-card-title strong {
+    font-size: 17px;
+    line-height: 1.2;
+  }
+
+  .component-card-title small {
+    margin-top: 3px;
+    font-size: 13px;
+    line-height: 1.35;
+  }
+
+  .component-card-stats small {
+    font-size: 12px;
+  }
+
+  .data-node,
+  .detail-stats dt,
+  .nasa-fact > span,
+  .nasa-fact small {
+    font-size: 10px;
+  }
+
+  .detail-copy {
+    overflow-y: auto;
+    scrollbar-color: var(--cyan-soft) transparent;
+    scrollbar-width: thin;
+  }
+
+  .detail-copy > p {
+    font-size: 16px;
+    line-height: 1.65;
+  }
+
+  .nasa-fact p {
+    font-size: 13px;
+  }
+
+  .detail-stats dd {
+    font-size: 14px;
+  }
+
+  .back-action,
+  .results-card .result-buttons > button {
+    font-size: 12px;
+  }
+
+  .selected-systems small,
+  .summary-destination span,
+  .summary-metrics span,
+  .board-status small,
+  .result-score small {
+    font-size: 10px;
+  }
+
+  .selected-systems strong,
+  .summary-destination small,
+  .summary-metrics small,
+  .board-status p,
+  .result-learning p {
+    font-size: 11px;
+  }
+
+  .board-status strong,
+  .result-learning strong {
+    font-size: 13px;
+  }
+
+  .results-card > p {
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 680px) {
+  p {
+    font-size: 14px !important;
+  }
+
+  .carousel-intro h1 {
+    font-size: 24px;
+  }
+
+  .context-heading h1 {
+    font-size: 27px;
+  }
+
+  .stage-copy h1,
+  .review-intro h1 {
+    font-size: 22px;
+  }
+
+  .results-card h1 {
+    font-size: 27px;
+  }
+
+  .mission-card-copy h2 {
+    font-size: 21px;
+  }
+
+  .detail-copy h2 {
+    font-size: 16px;
+  }
+
+  .kicker {
+    font-size: 10px;
+  }
+
+  .mission-card-top,
+  .mission-facts span,
+  .carousel-controls span {
+    font-size: 10px;
+  }
+
+  .mission-card-copy > p,
+  .mission-card-copy > button,
+  .next-action {
+    font-size: 12px;
+  }
+
+  .context-heading > p,
+  .story-transmission p,
+  .context-challenge p {
+    font-size: 10px;
+  }
+
+  .story-transmission small,
+  .context-challenge span,
+  .context-target span,
+  .context-target small,
+  .context-metrics dt {
+    font-size: 8px;
+  }
+
+  .context-target strong,
+  .context-metrics dd {
+    font-size: 11px;
+  }
+
+  .stage-nav-card > span,
+  .component-card-stats small,
+  .detail-type,
+  .detail-stats dt,
+  .nasa-fact > span,
+  .nasa-fact small {
+    font-size: 9px;
+  }
+
+  .stage-copy > p {
+    font-size: 13px;
+  }
+
+  .component-card-title strong {
+    font-size: 13px;
+    line-height: 1.2;
+  }
+
+  .component-card-title small {
+    margin-top: 2px;
+    font-size: 11px;
+    line-height: 1.25;
+  }
+
+  .detail-stats dd {
+    font-size: 12px;
+  }
+
+  .detail-copy {
+    overflow-y: auto;
+    scrollbar-width: thin;
+  }
+
+  .detail-copy > p {
+    font-size: 12px;
+    line-height: 1.55;
+  }
+
+  .nasa-fact p {
+    font-size: 10px;
+  }
+
+  .back-action,
+  .bottom-actions .next-action,
+  .selected-systems strong,
+  .summary-destination small,
+  .summary-metrics small,
+  .board-status p,
+  .result-score small,
+  .result-learning p {
+    font-size: 10px;
+  }
+
+  .selected-systems small,
+  .summary-destination span,
+  .summary-metrics span,
+  .board-status small {
+    font-size: 9px;
+  }
+
+  .board-status strong,
+  .result-learning strong {
+    font-size: 11px;
+  }
+
+  .results-card > p {
+    font-size: 13px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
