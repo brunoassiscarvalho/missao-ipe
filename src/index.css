@@ -129,18 +129,63 @@
   width: 100%;
   height: 100%;
   grid-template-rows: auto minmax(0, 1fr) auto;
-  padding: clamp(34px, 6vh, 68px) 0 clamp(24px, 4vh, 42px);
+  padding: clamp(22px, 4vh, 42px) 0 clamp(16px, 3vh, 30px);
+}
+
+.carousel-header {
+  display: flex;
+  width: min(1600px, calc(100% - clamp(24px, 6vw, 72px)));
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 0 auto clamp(18px, 3vh, 32px);
 }
 
 .carousel-intro {
-  width: min(1200px, calc(100% - 10vw));
-  margin: 0 auto clamp(18px, 3vh, 32px);
+  min-width: 0;
+}
+
+.engineer-stats {
+  display: flex;
+  flex: 0 0 auto;
+  gap: 10px;
+  margin-right: clamp(72px, 8vw, 104px);
+}
+
+.engineer-stats > div {
+  display: flex;
+  min-width: 144px;
+  align-items: center;
+  gap: 9px;
+  padding: 11px 13px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: linear-gradient(145deg, rgb(17 50 66 / 72%), rgb(5 18 27 / 82%));
+  color: var(--cyan);
+}
+
+.engineer-stats > div > span {
+  display: grid;
+  gap: 3px;
+}
+
+.engineer-stats small {
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.engineer-stats strong {
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 14px;
 }
 
 .kicker,
 .detail-type {
   color: var(--cyan);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.18em;
 }
@@ -165,6 +210,14 @@
   font-size: clamp(12px, 1.2vw, 15px);
 }
 
+.mission-theme {
+  display: block;
+  margin-top: 7px;
+  color: #7e9ba8;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
 .carousel-rail {
   display: flex;
   min-height: 0;
@@ -172,9 +225,9 @@
   gap: clamp(14px, 2vw, 24px);
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 10px max(5vw, calc((100vw - 1200px) / 2)) 18px;
+  padding: 10px max(3vw, calc((100vw - 1600px) / 2)) 18px;
   scroll-behavior: smooth;
-  scroll-padding-inline: max(5vw, calc((100vw - 1200px) / 2));
+  scroll-padding-inline: max(3vw, calc((100vw - 1600px) / 2));
   scroll-snap-type: x mandatory;
   scrollbar-width: none;
 }
@@ -338,7 +391,7 @@
   align-items: center;
   justify-content: space-between;
   color: var(--cyan);
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
 }
@@ -380,7 +433,7 @@
   align-items: center;
   gap: 4px;
   color: #94acb9;
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .mission-facts svg {
@@ -400,7 +453,7 @@
   box-shadow: 0 10px 25px rgb(26 173 203 / 16%);
   color: #031119;
   font-family: var(--font-display);
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.04em;
 }
@@ -437,7 +490,7 @@
   align-items: center;
   gap: 7px;
   color: #526e7b;
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
 }
@@ -464,11 +517,11 @@
   min-height: 0;
   grid-template-columns: minmax(360px, 0.9fr) minmax(430px, 1.1fr);
   grid-template-rows: auto minmax(0, 1fr);
-  column-gap: clamp(30px, 6vw, 90px);
+  column-gap: clamp(20px, 3vw, 48px);
   row-gap: clamp(12px, 2vh, 20px);
-  width: min(1240px, calc(100% - clamp(40px, 9vw, 140px)));
+  width: min(1600px, calc(100% - clamp(24px, 3vw, 48px)));
   margin: 0 auto;
-  padding: clamp(42px, 8vh, 88px) 0 clamp(28px, 5vh, 52px);
+  padding: clamp(24px, 4vh, 48px) 0 clamp(18px, 3vh, 32px);
 }
 
 .context-story {
@@ -522,7 +575,7 @@
 
 .story-transmission small {
   color: var(--cyan);
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.13em;
 }
@@ -530,7 +583,7 @@
 .story-transmission p {
   margin-top: 5px;
   color: #aac2cc;
-  font-size: clamp(10px, 1vw, 12px);
+  font-size: clamp(11px, 1vw, 12px);
   line-height: 1.55;
 }
 
@@ -544,7 +597,7 @@
   align-items: center;
   gap: 7px;
   color: #7f9ba8;
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.12em;
 }
@@ -556,7 +609,7 @@
 .context-challenge p {
   margin-top: 5px;
   color: #6f8b98;
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.5;
 }
 
@@ -658,7 +711,7 @@
 
 .context-target span {
   color: var(--cyan);
-  font-size: 7px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.14em;
 }
@@ -675,7 +728,7 @@
   right: 18px;
   color: #5e7e8c;
   font-family: monospace;
-  font-size: 8px;
+  font-size: 11px;
 }
 
 .context-metrics {
@@ -702,7 +755,7 @@
   align-items: center;
   gap: 5px;
   color: #5e7e8c;
-  font-size: 7px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
 }
@@ -726,9 +779,9 @@
   min-height: 0;
   grid-template-rows: auto minmax(0, 1fr);
   gap: clamp(18px, 3vh, 32px);
-  width: min(1380px, calc(100% - clamp(32px, 7vw, 110px)));
+  width: min(1680px, calc(100% - clamp(24px, 3vw, 48px)));
   margin: 0 auto;
-  padding: clamp(26px, 5vh, 54px) 0 24px;
+  padding: clamp(18px, 3vh, 30px) 0 16px;
 }
 
 .build-content {
@@ -758,7 +811,7 @@
   align-items: center;
   gap: 6px;
   color: #8ca9b7;
-  font-size: 9px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
 }
@@ -785,7 +838,7 @@
 .build-status-card > small {
   margin-top: 5px;
   color: #718e9b;
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1.3;
 }
 
@@ -833,7 +886,7 @@
   right: 0;
   display: grid;
   width: min(55vw, 660px);
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
 }
 
@@ -865,6 +918,18 @@
   transform: translateY(-2px);
 }
 
+.stage-nav-card:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+  transform: none;
+}
+
+.stage-nav-card:disabled:hover {
+  border-color: var(--line);
+  background: linear-gradient(145deg, rgb(14 40 53 / 72%), rgb(7 22 31 / 72%));
+  color: #668692;
+}
+
 .stage-nav-card > svg {
   flex: 0 0 auto;
 }
@@ -872,7 +937,7 @@
 .stage-nav-card > span {
   overflow: hidden;
   font-family: var(--font-display);
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -979,6 +1044,308 @@
   gap: clamp(14px, 2vw, 28px);
 }
 
+.science-loadout {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: minmax(0, 0.95fr) minmax(190px, 0.58fr) minmax(0, 1.47fr);
+  gap: clamp(8px, 1vw, 14px);
+}
+
+.science-catalog,
+.science-mission-list,
+.science-detail {
+  min-width: 0;
+  min-height: 0;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: linear-gradient(145deg, rgb(13 39 53 / 74%), rgb(5 16 24 / 72%));
+  box-shadow:
+    inset 0 1px rgb(255 255 255 / 4%),
+    0 25px 60px rgb(0 0 0 / 20%);
+  scrollbar-color: var(--cyan-soft) transparent;
+  scrollbar-width: thin;
+}
+
+.science-catalog {
+  padding: 12px;
+}
+
+.science-catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-content: start;
+  gap: 7px;
+}
+
+.science-list-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.science-list-heading > span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--cyan);
+}
+
+.science-list-heading > strong,
+.science-list-heading > small {
+  color: var(--text);
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.science-list-heading > small {
+  color: #7694a1;
+  white-space: normal;
+  text-align: right;
+}
+
+.science-item-card {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: start;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgb(7 27 38 / 75%);
+}
+
+.science-item-card[draggable="true"] {
+  cursor: grab;
+}
+
+.science-item-card[draggable="true"]:active {
+  cursor: grabbing;
+}
+
+.science-item-card[data-selected="true"] {
+  border-color: rgb(72 221 245 / 45%);
+  background: linear-gradient(145deg, rgb(16 70 87 / 52%), rgb(7 37 51 / 66%));
+}
+
+.science-item-info {
+  display: flex;
+  min-width: 0;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 6px;
+  color: var(--text);
+  text-align: left;
+}
+
+.science-item-icon {
+  display: grid;
+  width: 28px;
+  height: 28px;
+  flex: 0 0 28px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  color: var(--cyan);
+}
+
+.science-item-info > span:last-child {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.science-item-info strong {
+  overflow: hidden;
+  font-family: var(--font-display);
+  font-size: 11px;
+  text-overflow: ellipsis;
+}
+
+.science-item-info small,
+.science-item-actions > small {
+  margin-top: 3px;
+  color: #7694a1;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.science-item-actions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 5px;
+}
+
+.science-item-actions > small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.science-item-actions > strong {
+  min-width: 22px;
+  padding: 3px 6px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  font-size: 11px;
+  text-align: center;
+}
+
+.science-move-button {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: rgb(17 57 73 / 75%);
+  color: var(--cyan);
+}
+
+.science-move-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.science-mission-list {
+  padding: 10px;
+  overflow: auto;
+  transition:
+    border-color 150ms ease,
+    background 150ms ease;
+}
+
+.science-mission-list[data-drag-over="true"] {
+  border-color: var(--cyan);
+  background: linear-gradient(145deg, rgb(18 75 91 / 88%), rgb(5 29 40 / 92%));
+}
+
+.science-slots {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 6px;
+}
+
+.science-slot {
+  display: flex;
+  min-width: 0;
+  min-height: 66px;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 7px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+}
+
+.science-slot-number {
+  color: var(--cyan);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.science-slot strong {
+  width: 100%;
+  margin-top: 3px;
+  overflow: hidden;
+  color: var(--text);
+  font-family: var(--font-display);
+  font-size: 11px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.science-slot small {
+  margin-top: 3px;
+  color: #7694a1;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+.science-slot-empty {
+  border-style: dashed;
+  background: rgb(7 27 38 / 48%);
+}
+
+.science-slot-empty > span {
+  color: #8ca9b7;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.science-slot-filled {
+  border-color: rgb(72 221 245 / 38%);
+  background: linear-gradient(145deg, rgb(16 70 87 / 58%), rgb(7 37 51 / 72%));
+}
+
+.science-slot-continuation {
+  border-style: dashed;
+  background: rgb(11 49 63 / 68%);
+}
+
+.science-slot button {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  color: #9dcbd6;
+  font-size: 11px;
+}
+
+.science-detail {
+  display: flex;
+  flex-direction: column;
+  padding: clamp(14px, 2vw, 24px);
+}
+
+.science-detail h2 {
+  margin-top: 7px;
+  font-family: var(--font-display);
+  font-size: clamp(18px, 2vw, 25px);
+}
+
+.science-detail > p {
+  margin-top: 8px;
+  color: #a1bbc5;
+  font-size: 11px;
+  line-height: 1.5;
+}
+
+.science-detail .detail-stats {
+  margin: 12px 0;
+}
+
+.science-detail .nasa-fact {
+  margin-top: auto;
+}
+
+.science-source {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 10px;
+  color: var(--cyan);
+  font-size: 11px;
+  text-decoration: none;
+}
+
+.science-source:hover {
+  text-decoration: underline;
+}
+
 .component-grid-wrap,
 .component-detail,
 .assembly-overview,
@@ -1065,7 +1432,7 @@
 
 .component-card-title small {
   color: var(--muted);
-  font-size: 9px;
+  font-size: 11px;
 }
 
 .component-card-stats {
@@ -1078,7 +1445,7 @@
   align-items: center;
   gap: 4px;
   color: #7895a4;
-  font-size: 8px;
+  font-size: 11px;
 }
 
 .selection-mark {
@@ -1229,7 +1596,7 @@
   background: rgb(3 16 24 / 74%);
   color: #6ec7d9;
   font-family: monospace;
-  font-size: 7px;
+  font-size: 11px;
 }
 
 .node-a {
@@ -1269,14 +1636,14 @@
 .detail-copy > p {
   margin-top: 9px;
   color: #8da8b5;
-  font-size: clamp(10px, 1.1vw, 13px);
+  font-size: clamp(11px, 1.1vw, 13px);
   line-height: 1.55;
 }
 
 .detail-explanation {
   margin-top: 5px;
   color: #718e9b;
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.45;
 }
 
@@ -1297,7 +1664,7 @@
 
 .detail-stats dt {
   color: #5f7d8b;
-  font-size: 7px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
 }
@@ -1321,7 +1688,7 @@
   align-items: center;
   gap: 6px;
   color: var(--cyan);
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
 }
@@ -1329,7 +1696,7 @@
 .nasa-fact p {
   margin-top: 6px;
   color: #a2bec9;
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.45;
 }
 
@@ -1337,7 +1704,29 @@
   display: block;
   margin-top: 5px;
   color: #506b77;
-  font-size: 7px;
+  font-size: 11px;
+}
+
+.review-science-selection {
+  margin: 0 0 12px;
+  color: #7e9ba8;
+  font-size: 11px;
+}
+
+.review-science-selection strong {
+  color: var(--cyan);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.review-science-selection p,
+.review-science-selection ul {
+  margin-top: 5px;
+  line-height: 1.5;
+}
+
+.review-science-selection ul {
+  padding-left: 16px;
 }
 
 .bottom-actions {
@@ -1364,7 +1753,7 @@
   border-radius: var(--radius-sm);
   background: rgb(12 35 47 / 66%);
   color: #9eb8c3;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
 }
 
@@ -1459,13 +1848,13 @@
 .selected-systems small {
   margin-top: 5px;
   color: #587887;
-  font-size: 7px;
+  font-size: 11px;
   text-transform: uppercase;
 }
 
 .selected-systems strong {
   overflow: hidden;
-  font-size: 9px;
+  font-size: 11px;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -1489,7 +1878,7 @@
   align-items: center;
   gap: 7px;
   color: var(--cyan);
-  font-size: 8px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.1em;
 }
@@ -1503,7 +1892,7 @@
 .summary-destination small {
   margin-top: 5px;
   color: var(--muted);
-  font-size: 10px;
+  font-size: 11px;
   line-height: 1.45;
 }
 
@@ -1533,7 +1922,7 @@
 
 .summary-metrics small {
   color: #5e7b88;
-  font-size: 8px;
+  font-size: 11px;
 }
 
 .board-status {
@@ -1574,7 +1963,7 @@
 
 .board-status small {
   color: #6d8a97;
-  font-size: 7px;
+  font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.08em;
 }
@@ -1585,7 +1974,7 @@
 
 .board-status p {
   color: #6f8a96;
-  font-size: 8px;
+  font-size: 11px;
 }
 
 .results-screen {
@@ -1702,7 +2091,7 @@
 
 .result-score small {
   color: #5d7c89;
-  font-size: 7px;
+  font-size: 11px;
   font-weight: 700;
 }
 
@@ -1729,13 +2118,13 @@
 }
 
 .result-learning strong {
-  font-size: 10px;
+  font-size: 11px;
 }
 
 .result-learning p {
   margin-top: 3px;
   color: #7593a0;
-  font-size: 9px;
+  font-size: 11px;
   line-height: 1.4;
 }
 
@@ -1754,6 +2143,40 @@
   border-color: rgb(75 224 247 / 45%);
   background: linear-gradient(135deg, #37cce4, #177c9b);
   color: #031119;
+}
+
+.result-reward {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  margin: 0 0 12px;
+  color: var(--green);
+  font-size: 11px;
+}
+
+.result-loadout {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  margin: 0 0 12px;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: rgb(7 27 38 / 62%);
+  text-align: left;
+}
+
+.result-loadout strong {
+  color: var(--cyan);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+}
+
+.result-loadout span {
+  color: #8ca9b7;
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 @keyframes liquid-morph {
@@ -1794,7 +2217,7 @@
   }
 
   .build-status-card > span {
-    font-size: 8px;
+    font-size: 11px;
   }
 
   .build-status-card > strong {
@@ -1802,7 +2225,7 @@
   }
 
   .build-status-card > small {
-    font-size: 8px;
+    font-size: 11px;
   }
 
   .mission-card {
@@ -1811,7 +2234,7 @@
   }
 
   .component-layout {
-    grid-template-columns: minmax(280px, 0.9fr) minmax(370px, 1.1fr);
+    grid-template-columns: minmax(260px, 0.9fr) minmax(330px, 1.1fr);
   }
 
   .stage-copy {
@@ -1819,7 +2242,8 @@
   }
 
   .stage-navigation {
-    width: min(56vw, 465px);
+    width: min(50vw, 465px);
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 4px;
   }
 
@@ -1836,12 +2260,69 @@
   }
 
   .context-content {
-    grid-template-columns: minmax(320px, 0.9fr) minmax(350px, 1.1fr);
-    gap: 25px;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+    gap: 20px;
   }
 
   .component-grid {
     grid-template-columns: 1fr;
+  }
+
+  .science-loadout {
+    grid-template-columns: minmax(0, 0.9fr) minmax(150px, 0.65fr) minmax(0, 1.3fr);
+    gap: 7px;
+  }
+
+  .science-catalog {
+    padding: 7px;
+  }
+
+  .science-catalog-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 5px;
+  }
+
+  .science-item-card {
+    padding: 6px;
+  }
+
+  .science-item-info strong {
+    font-size: 11px;
+  }
+
+  .science-mission-list {
+    padding: 6px;
+  }
+
+  .science-list-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+    padding: 6px;
+    font-size: 11px;
+  }
+
+  .science-list-heading > strong,
+  .science-list-heading > small {
+    font-size: 11px;
+    text-align: left;
+  }
+
+  .science-slot {
+    min-height: 44px;
+    padding: 4px;
+  }
+
+  .science-slot strong {
+    font-size: 11px;
+  }
+
+  .science-slot small {
+    font-size: 11px;
+  }
+
+  .science-slot button {
+    font-size: 11px;
   }
 
   .component-card {
@@ -1885,13 +2366,31 @@
     padding-top: 70px;
   }
 
-  .carousel-intro {
+  .carousel-header {
     width: calc(100% - 38px);
+    align-items: stretch;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .carousel-intro {
+    width: 100%;
   }
 
   .carousel-intro h1 {
     padding-right: 30px;
     font-size: 29px;
+  }
+
+  .engineer-stats {
+    justify-content: flex-end;
+    gap: 7px;
+    margin-right: 0;
+  }
+
+  .engineer-stats > div {
+    min-width: 0;
+    padding: 8px 10px;
   }
 
   .carousel-rail {
@@ -1926,6 +2425,113 @@
     gap: 8px;
   }
 
+  .science-loadout {
+    grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr);
+    grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 5px;
+  }
+
+  .science-detail {
+    grid-column: 1 / -1;
+  }
+
+  .science-catalog-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+
+  .science-catalog,
+  .science-mission-list,
+  .science-detail {
+    border-radius: 10px;
+  }
+
+  .science-item-card {
+    gap: 3px;
+    padding: 5px;
+  }
+
+  .science-item-info {
+    gap: 4px;
+  }
+
+  .science-item-icon {
+    width: 22px;
+    height: 22px;
+    flex-basis: 22px;
+  }
+
+  .science-item-icon svg {
+    width: 15px;
+  }
+
+  .science-item-info small,
+  .science-item-actions > small {
+    font-size: 11px;
+  }
+
+  .science-move-button {
+    width: 23px;
+    height: 23px;
+  }
+
+  .science-detail {
+    padding: 8px;
+  }
+
+  .science-mission-list {
+    padding: 5px;
+  }
+
+  .science-list-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 3px;
+    margin-bottom: 5px;
+    padding: 5px;
+    font-size: 11px;
+  }
+
+  .science-list-heading > strong,
+  .science-list-heading > small {
+    font-size: 11px;
+    text-align: left;
+  }
+
+  .science-slot {
+    min-height: 36px;
+    padding: 4px;
+  }
+
+  .science-detail h2 {
+    font-size: 14px;
+  }
+
+  .science-detail > p {
+    font-size: 11px;
+  }
+
+  .science-detail .detail-stats {
+    grid-template-columns: 1fr;
+    margin: 5px 0;
+  }
+
+  .science-detail .detail-stats div {
+    padding: 4px 2px;
+  }
+
+  .science-detail .nasa-fact {
+    padding: 6px;
+  }
+
+  .science-source {
+    font-size: 11px;
+  }
+
+  .mission-theme {
+    font-size: 11px;
+  }
+
   .build-status {
     gap: 5px;
   }
@@ -1937,7 +2543,7 @@
   .build-status-card > span {
     align-items: flex-start;
     gap: 3px;
-    font-size: 7px;
+    font-size: 11px;
     letter-spacing: 0.03em;
   }
 
@@ -1951,7 +2557,7 @@
   }
 
   .build-status-card > small {
-    font-size: 7px;
+    font-size: 11px;
   }
 
   .context-content {
@@ -1974,7 +2580,7 @@
 
   .context-heading > p {
     margin-top: 11px;
-    font-size: 9px;
+    font-size: 11px;
     line-height: 1.5;
   }
 
@@ -1991,7 +2597,7 @@
   }
 
   .story-transmission p {
-    font-size: 8px;
+    font-size: 11px;
   }
 
   .context-challenge {
@@ -1999,7 +2605,7 @@
   }
 
   .context-challenge p {
-    font-size: 8px;
+    font-size: 11px;
   }
 
   .context-visual .mission-orb {
@@ -2044,7 +2650,7 @@
   }
 
   .context-metrics dt {
-    font-size: 5px;
+    font-size: 11px;
   }
 
   .context-metrics dt svg {
@@ -2052,7 +2658,7 @@
   }
 
   .context-metrics dd {
-    font-size: 8px;
+    font-size: 11px;
   }
 
   .stage-copy {
@@ -2096,7 +2702,7 @@
 
   .stage-nav-card > span {
     width: auto;
-    font-size: 7px;
+    font-size: 11px;
   }
 
   .component-layout {
@@ -2124,11 +2730,11 @@
   }
 
   .component-card-title strong {
-    font-size: 9px;
+    font-size: 11px;
   }
 
   .component-card-title small {
-    font-size: 7px;
+    font-size: 11px;
   }
 
   .component-card-stats {
@@ -2156,7 +2762,7 @@
   }
 
   .detail-type {
-    font-size: 7px;
+    font-size: 11px;
   }
 
   .detail-copy h2 {
@@ -2179,7 +2785,7 @@
   }
 
   .detail-stats dd {
-    font-size: 9px;
+    font-size: 11px;
     line-height: 1.3;
   }
 
@@ -2188,16 +2794,16 @@
   }
 
   .nasa-fact > span {
-    font-size: 6px;
+    font-size: 11px;
   }
 
   .nasa-fact p {
-    font-size: 7px;
+    font-size: 11px;
     line-height: 1.45;
   }
 
   .nasa-fact small {
-    font-size: 7px;
+    font-size: 11px;
   }
 
   .bottom-actions {
@@ -2209,7 +2815,7 @@
     min-width: 0;
     height: 40px;
     padding: 0 13px;
-    font-size: 9px;
+    font-size: 11px;
   }
 
   .review-layout {
@@ -2246,7 +2852,7 @@
   }
 
   .selected-systems strong {
-    font-size: 7px;
+    font-size: 11px;
   }
 
   .mission-summary {
@@ -2288,7 +2894,7 @@
   }
 
   .board-status strong {
-    font-size: 8px;
+    font-size: 11px;
   }
 
   .results-card {
@@ -2438,7 +3044,7 @@
   .context-target span,
   .context-target small,
   .context-metrics dt {
-    font-size: 10px;
+    font-size: 11px;
   }
 
   .story-transmission p,
@@ -2451,7 +3057,7 @@
   }
 
   .stage-nav-card > span {
-    font-size: 10px;
+    font-size: 11px;
   }
 
   .stage-copy > p {
@@ -2482,7 +3088,7 @@
   .detail-stats dt,
   .nasa-fact > span,
   .nasa-fact small {
-    font-size: 10px;
+    font-size: 11px;
   }
 
   .detail-copy {
@@ -2514,7 +3120,7 @@
   .summary-metrics span,
   .board-status small,
   .result-score small {
-    font-size: 10px;
+    font-size: 11px;
   }
 
   .selected-systems strong,
@@ -2566,13 +3172,13 @@
   }
 
   .kicker {
-    font-size: 10px;
+    font-size: 11px;
   }
 
   .mission-card-top,
   .mission-facts span,
   .carousel-controls span {
-    font-size: 10px;
+    font-size: 11px;
   }
 
   .mission-card-copy > p,
@@ -2584,7 +3190,7 @@
   .context-heading > p,
   .story-transmission p,
   .context-challenge p {
-    font-size: 10px;
+    font-size: 11px;
   }
 
   .story-transmission small,
@@ -2592,7 +3198,7 @@
   .context-target span,
   .context-target small,
   .context-metrics dt {
-    font-size: 8px;
+    font-size: 11px;
   }
 
   .context-target strong,
@@ -2606,7 +3212,7 @@
   .detail-stats dt,
   .nasa-fact > span,
   .nasa-fact small {
-    font-size: 9px;
+    font-size: 11px;
   }
 
   .stage-copy > p {
@@ -2639,7 +3245,7 @@
   }
 
   .nasa-fact p {
-    font-size: 10px;
+    font-size: 11px;
   }
 
   .back-action,
@@ -2650,14 +3256,14 @@
   .board-status p,
   .result-score small,
   .result-learning p {
-    font-size: 10px;
+    font-size: 11px;
   }
 
   .selected-systems small,
   .summary-destination span,
   .summary-metrics span,
   .board-status small {
-    font-size: 9px;
+    font-size: 11px;
   }
 
   .board-status strong,

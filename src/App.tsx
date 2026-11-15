@@ -26,7 +26,15 @@ import {
   Zap,
   type LucideIcon,
 } from "lucide-react";
-import { useMemo, useRef, useState } from "react";
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type Dispatch,
+  type DragEvent,
+  type SetStateAction,
+} from "react";
 import { BrowserRouter, Navigate, Route, Routes, useNavigate, useParams } from "react-router";
 
 type Mission = {
@@ -41,6 +49,8 @@ type Mission = {
   distance: string;
   duration: string;
   baseDays: number;
+  theme: MissionTheme;
+  themeLabel: string;
   reward: string;
   color: string;
   story: {
@@ -52,6 +62,13 @@ type Mission = {
     callSign: string;
   };
 };
+
+type MissionTheme =
+  | "atmosphere"
+  | "lunar-water"
+  | "mars-weather"
+  | "europa-ocean"
+  | "asteroid-sample";
 
 type ComponentOption = {
   id: string;
@@ -65,6 +82,7 @@ type ComponentOption = {
   energy: number;
   reliability: number;
   cargoCapacity?: number;
+  scienceSlots?: number;
   daysFactor?: number;
   scienceModifier?: number;
   energyMode?: "geradas" | "armazenadas" | "geradas/armazenadas";
@@ -81,6 +99,83 @@ type ComponentGroup = {
   options: ComponentOption[];
 };
 
+type ScienceItem = {
+  id: string;
+  name: string;
+  shortName: string;
+  description: string;
+  rule: string;
+  source: string;
+  sourceUrl: string;
+  mass: number;
+  cost: number;
+  slots: number;
+  durability: number;
+  scienceBonus: number;
+  affinity: Partial<Record<MissionTheme, number>>;
+};
+
+type StoredScienceItem = {
+  instanceId: string;
+  itemId: string;
+  usesRemaining: number;
+};
+
+type MissionMetrics = {
+  mass: number;
+  budget: number;
+  equipmentCost: number;
+  sciencePurchaseCost: number;
+  operatingCost: number;
+  projectedCost: number;
+  remainingBudget: number;
+  days: number;
+  energy: number;
+  reliability: number;
+  scienceCapacity: number;
+  efficiency: number;
+  payloadReady: boolean;
+  scienceSlotsUsed: number;
+  scienceSlotsAvailable: number;
+  canLaunch: boolean;
+  ready: boolean;
+};
+
+type LaunchRecord = {
+  id: string;
+  missionId: string;
+  shipSelection: Record<string, string>;
+  scienceSelection: string[];
+  metrics: MissionMetrics;
+  success: boolean;
+  reward: number;
+  completed: boolean;
+};
+
+type EngineerState = {
+  budget: number;
+  xp: number;
+  unlockedLevel: number;
+  completedBuilds: string[];
+  inventory: StoredScienceItem[];
+  shipSelections: Record<string, Record<string, string>>;
+  scienceSelections: Record<string, string[]>;
+  launches: Record<string, LaunchRecord>;
+};
+
+const STARTING_ENGINEER_BUDGET = 25;
+
+const INITIAL_ENGINEER_STATE: EngineerState = {
+  budget: STARTING_ENGINEER_BUDGET,
+  xp: 0,
+  unlockedLevel: 1,
+  completedBuilds: [],
+  inventory: [],
+  shipSelections: {},
+  scienceSelections: {},
+  launches: {},
+};
+
 const missions: Mission[] = [
   {
     id: "iss",
@@ -94,6 +189,8 @@ const missions: Mission[] = [
     distance: "400 km",
     duration: "30 dias",
     baseDays: 30,
+    theme: "atmosphere",
+    themeLabel: "Atmosfera e qualidade do ar",
     reward: "450 XP",
     color: "cyan",
     story: {
@@ -120,6 +217,8 @@ const missions: Mission[] = [
     distance: "384 mil km",
     duration: "48 dias",
     baseDays: 48,
+    theme: "lunar-water",
+    themeLabel: "Gelo e recursos lunares",
     reward: "780 XP",
     color: "violet",
     story: {
@@ -146,6 +245,8 @@ const missions: Mission[] = [
     distance: "225 mi km",
     duration: "210 dias",
     baseDays: 210,
+    theme: "mars-weather",
+    themeLabel: "Clima e geologia de Marte",
     reward: "1.240 XP",
     color: "orange",
     story: {
@@ -172,6 +273,8 @@ const missions: Mission[] = [
     distance: "628 mi km",
     duration: "5,5 anos",
     baseDays: 2008,
+    theme: "europa-ocean",
+    themeLabel: "Oceano e química de Europa",
     reward: "2.100 XP",
     color: "blue",
     story: {
@@ -198,6 +301,8 @@ const missions: Mission[] = [
     distance: "2,1 bi km",
     duration: "7 anos",
     baseDays: 2555,
+    theme: "asteroid-sample",
+    themeLabel: "Amostras e origem do Sistema Solar",
     reward: "3.400 XP",
     color: "pink",
     story: {
@@ -229,12 +334,13 @@ const componentGroups: ComponentGroup[] = [
         description:
           "Um lançador de dois estágios com primeiro estágio reutilizável. Sua capacidade excede a necessidade da carga e oferece boa margem operacional.",
         fact: "O Falcon 9 tem dois estágios e o primeiro pode ser reutilizado. A SpaceX realiza voos de reabastecimento da NASA à ISS com esse veículo.",
-        rule: "A carga deve caber no limite do veículo. Sua massa entra no total da nave e pode aumentar os dias de viagem.",
+        rule: "A carga deve caber no limite do veículo; há 4 compartimentos científicos. Sua massa entra no total da nave e pode aumentar os dias de viagem.",
         mass: 549,
         cost: 6.2,
         energy: 8,
         reliability: 96,
         cargoCapacity: 22800,
+        scienceSlots: 4,
         statLabel: "Carga para LEO",
         statValue: "22.800 kg",
       },
@@ -245,12 +351,13 @@ const componentGroups: ComponentGroup[] = [
         description:
           "Solução compacta para cargas pequenas em órbita baixa. Reduz o custo, mas deixa pouca margem para sistemas redundantes.",
         fact: "O Atlas L-2 é um veículo didático fictício; lançadores leves reais, como o Electron, colocam pequenos satélites em órbita.",
-        rule: "A carga deve caber no limite de 820 kg. A menor massa reduz o efeito do peso no tempo de viagem.",
+        rule: "A carga deve caber no limite de 820 kg; há 2 compartimentos científicos. A menor massa reduz o efeito do peso no tempo de viagem.",
         mass: 360,
         cost: 4.8,
         energy: 6,
         reliability: 87,
         cargoCapacity: 820,
+        scienceSlots: 2,
         statLabel: "Carga para LEO",
         statValue: "820 kg",
       },
@@ -261,12 +368,13 @@ const componentGroups: ComponentGroup[] = [
         description:
           "Grande capacidade e estágio superior de longa duração. É robusto, mas consome uma parcela maior do orçamento.",
         fact: "O estágio superior Centaur V usa hidrogênio e oxigênio líquidos, propelentes criogênicos de alto desempenho.",
-        rule: "A carga deve caber no limite de 27.200 kg. A massa maior entra no cálculo do tempo de viagem.",
+        rule: "A carga deve caber no limite de 27.200 kg; há 5 compartimentos científicos. A massa maior entra no cálculo do tempo de viagem.",
         mass: 720,
         cost: 9.3,
         energy: 9,
         reliability: 98,
         cargoCapacity: 27200,
+        scienceSlots: 5,
         statLabel: "Carga para LEO",
         statValue: "27.200 kg",
       },
@@ -277,12 +385,13 @@ const componentGroups: ComponentGroup[] = [
         description:
           "O menor veículo disponível. É ágil e econômico, mas não comporta a cápsula e a carga desta missão.",
         fact: "O Electron, da Rocket Lab, é um lançador leve usado para colocar pequenos satélites em órbita dedicada.",
-        rule: "A carga deve caber no limite de 300 kg. Se exceder a capacidade do veículo, a missão não pode ser lançada.",
+        rule: "A carga deve caber no limite de 300 kg; há 1 compartimento científico. Se exceder a capacidade do veículo, a missão não pode ser lançada.",
         mass: 300,
         cost: 3.7,
         energy: 5,
         reliability: 79,
         cargoCapacity: 300,
+        scienceSlots: 1,
         statLabel: "Carga para LEO",
         statValue: "300 kg",
       },
@@ -293,12 +402,13 @@ const componentGroups: ComponentGroup[] = [
         description:
           "Projetado para missões de carga em órbita baixa. Oferece bom volume interno para instrumentos científicos.",
         fact: "A família Antares lançou naves de carga Cygnus em missões de reabastecimento da ISS.",
-        rule: "A carga deve caber no limite de 10.500 kg. A massa do lançador também afeta a duração estimada da viagem.",
+        rule: "A carga deve caber no limite de 10.500 kg; há 4 compartimentos científicos. A massa do lançador também afeta a duração estimada da viagem.",
         mass: 610,
         cost: 7.4,
         energy: 8,
         reliability: 93,
         cargoCapacity: 10500,
+        scienceSlots: 4,
         statLabel: "Carga para LEO",
         statValue: "10.500 kg",
       },
@@ -309,12 +419,13 @@ const componentGroups: ComponentGroup[] = [
         description:
           "Coifa ampla e primeiro estágio reutilizável. Capacidade muito acima do necessário para esta missão.",
         fact: "O New Glenn tem uma coifa de grande diâmetro e um primeiro estágio projetado para reutilização, permitindo levar cargas volumosas.",
-        rule: "A carga deve caber no limite de 45.000 kg. A capacidade excedente não reduz o custo de compra nem a massa do veículo.",
+        rule: "A carga deve caber no limite de 45.000 kg; há 6 compartimentos científicos. A capacidade excedente não reduz o custo de compra nem a massa do veículo.",
         mass: 790,
         cost: 10.1,
         energy: 10,
         reliability: 94,
         cargoCapacity: 45000,
+        scienceSlots: 6,
         statLabel: "Carga para LEO",
         statValue: "45.000 kg",
       },
@@ -561,6 +672,307 @@ const initialSelection: Record<string, string> = {
   navigation: "startracker",
 };
 
+const SCIENCE_ITEMS: ScienceItem[] = [
+  {
+    id: "iss-air-quality",
+    name: "Monitor de qualidade do ar",
+    shortName: "Air Quality Monitor",
+    description:
+      "Instrumentos de monitoramento da ISS acompanham contaminantes e parâmetros do ar em um ambiente fechado de microgravidade.",
+    rule: "Mede a composição atmosférica da missão. Afinidade com o tema Atmosfera: 100%; aumenta em 38 p.p. a capacidade científica. Dura 3 missões.",
+    source: "Pesquisa na Estação Espacial Internacional",
+    sourceUrl:
+      "https://www.nasa.gov/international-space-station/space-station-research-and-technology/",
+    mass: 48,
+    cost: 1.1,
+    slots: 1,
+    durability: 3,
+    scienceBonus: 38,
+    affinity: { atmosphere: 100, "mars-weather": 30, "europa-ocean": 15 },
+  },
+  {
+    id: "lunar-neutron",
+    name: "Detector de nêutrons lunares",
+    shortName: "LEND",
+    description:
+      "O Lunar Exploration Neutron Detector do Lunar Reconnaissance Orbiter mapeia variações de nêutrons que ajudam a investigar hidrogênio próximo à superfície lunar.",
+    rule: "Procura sinais associados a hidrogênio em regiões lunares. Afinidade com Gelo e recursos lunares: 100%; aumenta em 40 p.p. a capacidade científica. Dura 3 missões.",
+    source: "Lunar Reconnaissance Orbiter",
+    sourceUrl: "https://science.nasa.gov/mission/lro/",
+    mass: 56,
+    cost: 1.3,
+    slots: 1,
+    durability: 3,
+    scienceBonus: 40,
+    affinity: { "lunar-water": 100, "asteroid-sample": 25 },
+  },
+  {
+    id: "lunar-diviner",
+    name: "Radiômetro térmico lunar",
+    shortName: "Diviner",
+    description:
+      "O Diviner Lunar Radiometer Experiment mede a temperatura e propriedades térmicas da superfície da Lua, incluindo crateras permanentemente sombreadas.",
+    rule: "Relaciona temperatura e terreno lunar. Afinidade com Gelo e recursos lunares: 100%; aumenta em 34 p.p. a capacidade científica. Dura 4 missões.",
+    source: "Lunar Reconnaissance Orbiter",
+    sourceUrl: "https://science.nasa.gov/mission/lro/",
+    mass: 62,
+    cost: 1.2,
+    slots: 1,
+    durability: 4,
+    scienceBonus: 34,
+    affinity: { "lunar-water": 100, "mars-weather": 35 },
+  },
+  {
+    id: "mars-meda",
+    name: "Analisador ambiental marciano",
+    shortName: "MEDA",
+    description:
+      "O Mars Environmental Dynamics Analyzer do rover Perseverance mede condições como temperatura, vento, pressão, umidade e poeira na superfície de Marte.",
+    rule: "Registra o clima marciano. Afinidade com Clima e geologia de Marte: 100%; aumenta em 42 p.p. a capacidade científica. Dura 3 missões.",
+    source: "Mars 2020 Perseverance",
+    sourceUrl: "https://science.nasa.gov/mission/mars-2020-perseverance/",
+    mass: 68,
+    cost: 1.6,
+    slots: 1,
+    durability: 3,
+    scienceBonus: 42,
+    affinity: { "mars-weather": 100, atmosphere: 35, "lunar-water": 20 },
+  },
+  {
+    id: "europa-mise",
+    name: "Espectrômetro infravermelho",
+    shortName: "MISE",
+    description:
+      "O Mapping Imaging Spectrometer for Europa observará a composição da superfície e identificará materiais como sais, gelo e compostos orgânicos.",
+    rule: "Analisa a composição da superfície de Europa. Afinidade com Oceano e química de Europa: 100%; aumenta em 42 p.p. a capacidade científica. Dura 3 missões.",
+    source: "Instrumentos da Europa Clipper",
+    sourceUrl: "https://science.nasa.gov/mission/europa-clipper/spacecraft-instruments/",
+    mass: 74,
+    cost: 1.8,
+    slots: 1,
+    durability: 3,
+    scienceBonus: 42,
+    affinity: { "europa-ocean": 100, "lunar-water": 35, "asteroid-sample": 25 },
+  },
+  {
+    id: "europa-reason",
+    name: "Radar de penetração no gelo",
+    shortName: "REASON",
+    description:
+      "O radar REASON da Europa Clipper investigará a camada de gelo e estruturas subsuperficiais; ele não é um detector direto de vida.",
+    rule: "Sonda o gelo e a estrutura subsuperficial. Afinidade com Oceano e química de Europa: 100%; aumenta em 40 p.p. a capacidade científica. Dura 3 missões.",
+    source: "Instrumentos da Europa Clipper",
+    sourceUrl: "https://science.nasa.gov/mission/europa-clipper/spacecraft-instruments/",
+    mass: 90,
+    cost: 1.9,
+    slots: 2,
+    durability: 3,
+    scienceBonus: 40,
+    affinity: { "europa-ocean": 100, "lunar-water": 40 },
+  },
+  {
+    id: "bennu-ovirs",
+    name: "Espectrômetro de amostras",
+    shortName: "OVIRS",
+    description:
+      "O espectrômetro OVIRS da OSIRIS-REx analisou a composição mineral e molecular da superfície do asteroide Bennu.",
+    rule: "Analisa a composição de um asteroide rico em carbono. Afinidade com Amostras e origem do Sistema Solar: 100%; aumenta em 40 p.p. a capacidade científica. Dura 3 missões.",
+    source: "OSIRIS-REx",
+    sourceUrl: "https://science.nasa.gov/mission/osiris-rex/",
+    mass: 58,
+    cost: 1.5,
+    slots: 1,
+    durability: 3,
+    scienceBonus: 40,
+    affinity: { "asteroid-sample": 100, "europa-ocean": 35, "lunar-water": 20 },
+  },
+];
+
+const ENGINEER_STORAGE_KEY = "missao-ipe-engineer-v1";
+const DAILY_OPERATING_COST = 0.0005;
+
+function getLaunchExperience(missionId: string, success: boolean) {
+  if (!success) return 120;
+  const reward = missions.find((mission) => mission.id === missionId)?.reward;
+  return reward ? Number(reward.replace(/[^\d]/g, "")) : 0;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function migrateEngineerState(value: unknown): EngineerState | undefined {
+  if (!isRecord(value)) return undefined;
+
+  const isStringMap = (map: unknown): map is Record<string, string> =>
+    isRecord(map) && Object.values(map).every((item) => typeof item === "string");
+  const isSelectionMap = (map: unknown): map is Record<string, Record<string, string>> =>
+    isRecord(map) && Object.values(map).every(isStringMap);
+  const isScienceSelectionMap = (map: unknown): map is Record<string, string[]> =>
+    isRecord(map) &&
+    Object.values(map).every(
+      (selection) => Array.isArray(selection) && selection.every((id) => typeof id === "string"),
+    );
+  const isStoredItem = (item: unknown): item is StoredScienceItem =>
+    isRecord(item) &&
+    typeof item.instanceId === "string" &&
+    typeof item.itemId === "string" &&
+    typeof item.usesRemaining === "number" &&
+    Number.isFinite(item.usesRemaining) &&
+    item.usesRemaining > 0;
+  const isMetrics = (metrics: unknown): metrics is MissionMetrics =>
+    isRecord(metrics) &&
+    [
+      "mass",
+      "budget",
+      "equipmentCost",
+      "sciencePurchaseCost",
+      "operatingCost",
+      "projectedCost",
+      "remainingBudget",
+      "days",
+      "energy",
+      "reliability",
+      "scienceCapacity",
+      "efficiency",
+      "scienceSlotsUsed",
+      "scienceSlotsAvailable",
+    ].every((key) => typeof metrics[key] === "number") &&
+    ["payloadReady", "canLaunch", "ready"].every((key) => typeof metrics[key] === "boolean");
+  const budget =
+    typeof value.budget === "number" && Number.isFinite(value.budget)
+      ? value.budget
+      : STARTING_ENGINEER_BUDGET;
+  const savedXp =
+    typeof value.xp === "number" && Number.isFinite(value.xp) ? Math.max(0, value.xp) : undefined;
+  const shipSelections = isSelectionMap(value.shipSelections) ? value.shipSelections : {};
+  const scienceSelections = isScienceSelectionMap(value.scienceSelections)
+    ? value.scienceSelections
+    : {};
+  const inventory = Array.isArray(value.inventory)
+    ? value.inventory.filter(
+        (item): item is StoredScienceItem =>
+          isStoredItem(item) && SCIENCE_ITEMS.some((scienceItem) => scienceItem.id === item.itemId),
+      )
+    : [];
+  const unlockedLevel =
+    typeof value.unlockedLevel === "number" && Number.isFinite(value.unlockedLevel)
+      ? Math.min(5, Math.max(1, Math.floor(value.unlockedLevel)))
+      : 1;
+  const completedBuilds = Array.isArray(value.completedBuilds)
+    ? value.completedBuilds.filter(
+        (missionId): missionId is string =>
+          typeof missionId === "string" && missions.some((mission) => mission.id === missionId),
+      )
+    : [];
+  const launches: Record<string, LaunchRecord> = {};
+
+  if (isRecord(value.launches)) {
+    for (const [launchKey, savedLaunch] of Object.entries(value.launches)) {
+      if (!isRecord(savedLaunch)) continue;
+      const missionId =
+        typeof savedLaunch.missionId === "string" ? savedLaunch.missionId : launchKey;
+      const mission = missions.find((item) => item.id === missionId);
+      if (!mission) continue;
+
+      const shipSelection = isStringMap(savedLaunch.shipSelection)
+        ? savedLaunch.shipSelection
+        : { ...initialSelection, ...shipSelections[missionId] };
+      const scienceSelection = Array.isArray(savedLaunch.scienceSelection)
+        ? savedLaunch.scienceSelection.filter(
+            (itemId): itemId is string =>
+              typeof itemId === "string" &&
+              SCIENCE_ITEMS.some((scienceItem) => scienceItem.id === itemId),
+          )
+        : [];
+      const metrics = isMetrics(savedLaunch.metrics)
+        ? savedLaunch.metrics
+        : calculateMissionMetrics(
+            mission,
+            shipSelection,
+            scienceSelection,
+            inventory,
+            scienceSelections,
+            budget,
+          );
+      const success =
+        typeof savedLaunch.success === "boolean" ? savedLaunch.success : metrics.ready;
+
+      launches[missionId] = {
+        id: typeof savedLaunch.id === "string" ? savedLaunch.id : crypto.randomUUID(),
+        missionId,
+        shipSelection,
+        scienceSelection,
+        metrics,
+        success,
+        reward:
+          typeof savedLaunch.reward === "number" && Number.isFinite(savedLaunch.reward)
+            ? savedLaunch.reward
+            : success
+              ? 5 + mission.level + metrics.scienceCapacity * 0.1
+              : 0,
+        completed: savedLaunch.completed === true,
+      };
+    }
+  }
+
+  const xp =
+    savedXp ??
+    Object.values(launches).reduce(
+      (total, launch) =>
+        total + (launch.completed ? getLaunchExperience(launch.missionId, launch.success) : 0),
+      0,
+    );
+
+  return {
+    budget,
+    xp,
+    unlockedLevel,
+    completedBuilds,
+    inventory,
+    shipSelections,
+    scienceSelections,
+    launches,
+  };
+}
+
+function loadEngineerState(): EngineerState {
+  let saved: string | null;
+  try {
+    saved = window.localStorage.getItem(ENGINEER_STORAGE_KEY);
+  } catch (error) {
+    console.error("Não foi possível acessar o perfil salvo do engenheiro.", error);
+    return INITIAL_ENGINEER_STATE;
+  }
+  if (saved === null) return INITIAL_ENGINEER_STATE;
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(saved);
+  } catch (error) {
+    preserveInvalidEngineerData(saved, error);
+    return INITIAL_ENGINEER_STATE;
+  }
+
+  const migrated = migrateEngineerState(parsed);
+  if (migrated) return migrated;
+
+  preserveInvalidEngineerData(saved, new Error("Estrutura de perfil inválida."));
+  return INITIAL_ENGINEER_STATE;
+}
+
+function preserveInvalidEngineerData(saved: string, error: unknown) {
+  try {
+    window.localStorage.setItem(`${ENGINEER_STORAGE_KEY}-backup`, saved);
+  } catch (backupError) {
+    console.error("Não foi possível criar uma cópia do perfil inválido.", backupError);
+  }
+  console.error(
+    "Não foi possível migrar o perfil do engenheiro. Um perfil novo será iniciado; os dados anteriores foram preservados quando possível.",
+    error,
+  );
+}
+
 function MissionOrb({ mission }: { mission: Mission }) {
   return (
     <div className="mission-orb" data-color={mission.color} aria-hidden="true">
@@ -579,10 +991,14 @@ function MissionStageNavigation({
   mission,
   currentStep,
   inContext = false,
+  inScience = false,
+  scienceEnabled = false,
 }: {
   mission: Mission;
   currentStep?: number;
   inContext?: boolean;
+  inScience?: boolean;
+  scienceEnabled?: boolean;
 }) {
   const navigate = useNavigate();
 
@@ -600,39 +1016,38 @@ function MissionStageNavigation({
         <i className="stage-nav-planet" data-color={mission.color} aria-hidden="true" />
         <span>Contexto</span>
       </button>
-      {componentGroups.map((item, index) => {
-        const Icon = item.icon;
-        const state =
-          currentStep === undefined
-            ? "next"
-            : index < currentStep
-              ? "done"
-              : index === currentStep
-                ? "active"
-                : "next";
-        return (
-          <button
-            className="stage-nav-card"
-            data-state={state}
-            aria-current={index === currentStep ? "step" : undefined}
-            key={item.id}
-            onClick={() => navigate(`/mission/${mission.id}/build/${index}`)}
-          >
-            <Icon size={16} />
-            <span>{item.shortName}</span>
-            {state === "done" && (
-              <i className="stage-nav-check" aria-label="Etapa visitada">
-                <Check size={8} />
-              </i>
-            )}
-          </button>
-        );
-      })}
+      <button
+        className="stage-nav-card"
+        data-state={currentStep !== undefined ? "active" : inScience ? "done" : "next"}
+        aria-current={currentStep !== undefined ? "step" : undefined}
+        onClick={() => navigate(`/mission/${mission.id}/build/0`)}
+      >
+        <Rocket size={16} />
+        <span>1 · Montar nave</span>
+      </button>
+      <button
+        className="stage-nav-card"
+        data-state={inScience ? "active" : scienceEnabled ? "done" : "next"}
+        aria-current={inScience ? "step" : undefined}
+        disabled={!scienceEnabled}
+        onClick={() => navigate(`/mission/${mission.id}/science`)}
+      >
+        <Atom size={16} />
+        <span>2 · Itens científicos</span>
+      </button>
     </nav>
   );
 }
 
-function MissionsScreen({ unlockedLevel }: { unlockedLevel: number }) {
+function MissionsScreen({
+  unlockedLevel,
+  budget,
+  xp,
+}: {
+  unlockedLevel: number;
+  budget: number;
+  xp: number;
+}) {
   const navigate = useNavigate();
   const railRef = useRef<HTMLDivElement>(null);
 
@@ -654,10 +1069,30 @@ function MissionsScreen({ unlockedLevel }: { unlockedLevel: number }) {
         <i aria-hidden="true" />
       </button>
       <section className="mission-carousel" aria-label="Missões disponíveis">
-        <div className="carousel-intro">
-          <span className="kicker">PROGRAMA DE EXPLORAÇÃO</span>
-          <h1>Escolha sua próxima missão</h1>
-          <p>Cada conquista abre uma nova fronteira.</p>
+        <div className="carousel-header">
+          <div className="carousel-intro">
+            <span className="kicker">PROGRAMA DE EXPLORAÇÃO</span>
+            <h1>Escolha sua próxima missão</h1>
+            <p>
+              Cada conquista abre uma nova fronteira. Tema: ciência inspirada em missões da NASA.
+            </p>
+          </div>
+          <div className="engineer-stats" aria-label="Progresso atual do engenheiro">
+            <div>
+              <Trophy size={17} aria-hidden="true" />
+              <span>
+                <small>XP ATUAL</small>
+                <strong>{xp.toLocaleString("pt-BR")} XP</strong>
+              </span>
+            </div>
+            <div>
+              <CircleDollarSign size={17} aria-hidden="true" />
+              <span>
+                <small>ORÇAMENTO ATUAL</small>
+                <strong>${budget.toFixed(1)} mi</strong>
+              </span>
+            </div>
+          </div>
         </div>
         <div className="carousel-rail" ref={railRef}>
           {missions.map((mission) => {
@@ -675,6 +1110,7 @@ function MissionsScreen({ unlockedLevel }: { unlockedLevel: number }) {
                   </div>
                   <h2>{mission.name}</h2>
                   <p>{mission.destination}</p>
+                  <small className="mission-theme">TEMA · {mission.themeLabel}</small>
                   <div className="mission-facts">
                     <span>
                       <Target size={13} /> {mission.payload}
@@ -827,11 +1263,13 @@ function ComponentVisual({ group, option }: { group: ComponentGroup; option: Com
 function BottomActions({
   backLabel = "Voltar",
   nextLabel = "Avançar",
+  nextDisabled = false,
   onBack,
   onNext,
 }: {
   backLabel?: string;
   nextLabel?: string;
+  nextDisabled?: boolean;
   onBack: () => void;
   onNext: () => void;
 }) {
@@ -840,7 +1278,7 @@ function BottomActions({
       <button className="back-action" onClick={onBack}>
         <ArrowLeft size={17} /> {backLabel}
       </button>
-      <button className="next-action" onClick={onNext}>
+      <button className="next-action" onClick={onNext} disabled={nextDisabled}>
         {nextLabel} <ArrowRight size={17} />
       </button>
     </div>
@@ -849,10 +1287,22 @@ function BottomActions({
 
 function BuildScreen({
   selection,
+  scienceSelection,
+  inventory,
+  scienceSelections,
+  budget,
+  scienceEnabled,
   onSelect,
+  onCompleteBuild,
 }: {
   selection: Record<string, string>;
+  scienceSelection: string[];
+  inventory: StoredScienceItem[];
+  scienceSelections: Record<string, string[]>;
+  budget: number;
+  scienceEnabled: boolean;
   onSelect: (groupId: string, optionId: string) => void;
+  onCompleteBuild: () => void;
 }) {
   const navigate = useNavigate();
   const { missionId = "iss", step = "0" } = useParams();
@@ -861,7 +1311,18 @@ function BuildScreen({
   const selectedId = selection[group.id] ?? group.options[0].id;
   const selected = group.options.find((option) => option.id === selectedId) ?? group.options[0];
   const mission = missions.find((item) => item.id === missionId) ?? missions[0];
-  const metrics = useMemo(() => calculateMissionMetrics(mission, selection), [mission, selection]);
+  const metrics = useMemo(
+    () =>
+      calculateMissionMetrics(
+        mission,
+        selection,
+        scienceSelection,
+        inventory,
+        scienceSelections,
+        budget,
+      ),
+    [mission, selection, scienceSelection, inventory, scienceSelections, budget],
+  );
 
   const previous = () => {
     if (stepIndex === 0) navigate(`/mission/${missionId}/context`);
@@ -869,8 +1330,10 @@ function BuildScreen({
   };
 
   const next = () => {
-    if (stepIndex === componentGroups.length - 1) navigate(`/mission/${missionId}/review`);
-    else navigate(`/mission/${missionId}/build/${stepIndex + 1}`);
+    if (stepIndex === componentGroups.length - 1) {
+      onCompleteBuild();
+      navigate(`/mission/${missionId}/science`);
+    } else navigate(`/mission/${missionId}/build/${stepIndex + 1}`);
   };
 
   return (
@@ -880,12 +1343,17 @@ function BuildScreen({
         <div className="stage-copy">
           <div className="stage-heading">
             <span className="kicker">
-              {mission.code} · ETAPA {stepIndex + 1} DE {componentGroups.length}
+              {mission.code} · FASE 1 DE 2 · MONTAR NAVE · SISTEMA {stepIndex + 1} DE{" "}
+              {componentGroups.length}
             </span>
             <h1>{group.name}</h1>
             <p>{group.description}</p>
           </div>
-          <MissionStageNavigation mission={mission} currentStep={stepIndex} />
+          <MissionStageNavigation
+            mission={mission}
+            currentStep={stepIndex}
+            scienceEnabled={scienceEnabled}
+          />
         </div>
 
         <div className="component-layout">
@@ -958,6 +1426,12 @@ function BuildScreen({
                   <dt>{selected.statLabel.toUpperCase()}</dt>
                   <dd>{selected.statValue}</dd>
                 </div>
+                {selected.scienceSlots !== undefined && (
+                  <div>
+                    <dt>COMPARTIMENTOS CIENTÍFICOS</dt>
+                    <dd>{selected.scienceSlots} espaço(s)</dd>
+                  </div>
+                )}
                 {selected.daysFactor !== undefined && (
                   <div>
                     <dt>FATOR DE VIAGEM</dt>
@@ -992,7 +1466,7 @@ function BuildScreen({
         backLabel={stepIndex === 0 ? "Contexto" : componentGroups[stepIndex - 1].shortName}
         nextLabel={
           stepIndex === componentGroups.length - 1
-            ? "Revisar missão"
+            ? "Selecionar itens científicos"
             : componentGroups[stepIndex + 1].shortName
         }
         onBack={previous}
@@ -1002,27 +1476,13 @@ function BuildScreen({
   );
 }
 
-type MissionMetrics = {
-  mass: number;
-  equipmentCost: number;
-  operatingCost: number;
-  projectedCost: number;
-  remainingBudget: number;
-  days: number;
-  energy: number;
-  reliability: number;
-  scienceCapacity: number;
-  efficiency: number;
-  payloadReady: boolean;
-  ready: boolean;
-};
-
-const MISSION_BUDGET = 15;
-const DAILY_OPERATING_COST = 0.0005;
-
 function calculateMissionMetrics(
   mission: Mission,
   selection: Record<string, string>,
+  scienceSelection: string[],
+  inventory: StoredScienceItem[],
+  reservedScienceSelections: Record<string, string[]>,
+  budget: number,
 ): MissionMetrics {
   const selectedOptions = componentGroups.map(
     (group) =>
@@ -1030,23 +1490,61 @@ function calculateMissionMetrics(
   );
   const vehicle = selectedOptions.find((option) => option.cargoCapacity !== undefined);
   const protection = selectedOptions.find((option) => option.scienceModifier !== undefined);
-  const propulsion = componentGroups
-    .find((group) => group.id === "propulsion")!
-    .options.find((option) => option.id === selection.propulsion)!;
-  const navigation = componentGroups
-    .find((group) => group.id === "navigation")!
-    .options.find((option) => option.id === selection.navigation)!;
+  const propulsionGroup = componentGroups.find((group) => group.id === "propulsion")!;
+  const navigationGroup = componentGroups.find((group) => group.id === "navigation")!;
+  const propulsion =
+    propulsionGroup.options.find((option) => option.id === selection.propulsion) ??
+    propulsionGroup.options[0];
+  const navigation =
+    navigationGroup.options.find((option) => option.id === selection.navigation) ??
+    navigationGroup.options[0];
 
-  const mass = mission.payloadKg + selectedOptions.reduce((sum, option) => sum + option.mass, 0);
+  const selectedScienceItems = scienceSelection
+    .map((id) => SCIENCE_ITEMS.find((item) => item.id === id))
+    .filter((item): item is ScienceItem => item !== undefined);
+  const scienceMass = selectedScienceItems.reduce((sum, item) => sum + item.mass, 0);
+  const scienceSlotsUsed = selectedScienceItems.reduce((sum, item) => sum + item.slots, 0);
+  const scienceSlotsAvailable = vehicle?.scienceSlots ?? 0;
+  const mass =
+    mission.payloadKg + scienceMass + selectedOptions.reduce((sum, option) => sum + option.mass, 0);
   const equipmentCost = selectedOptions.reduce((sum, option) => sum + option.cost, 0);
   const energyDraw = selectedOptions.reduce((sum, option) => sum + option.energy, 0);
   const energy = Math.max(0, Math.min(99, 64 - energyDraw));
   const reliability = Math.round(
     selectedOptions.reduce((sum, option) => sum + option.reliability, 0) / selectedOptions.length,
   );
+  const inventoryCounts = inventory.reduce<Record<string, number>>((counts, item) => {
+    counts[item.itemId] = (counts[item.itemId] ?? 0) + 1;
+    return counts;
+  }, {});
+  const reservedCounts = Object.entries(reservedScienceSelections).reduce<Record<string, number>>(
+    (counts, [reservedMissionId, ids]) => {
+      if (reservedMissionId === mission.id) return counts;
+      for (const id of ids) counts[id] = (counts[id] ?? 0) + 1;
+      return counts;
+    },
+    {},
+  );
+  const scienceSelectionCounts = scienceSelection.reduce<Record<string, number>>((counts, id) => {
+    counts[id] = (counts[id] ?? 0) + 1;
+    return counts;
+  }, {});
+  const sciencePurchaseCost = Object.entries(scienceSelectionCounts).reduce((sum, [id, count]) => {
+    const item = SCIENCE_ITEMS.find((entry) => entry.id === id);
+    if (!item) return sum;
+    const available = Math.max(0, (inventoryCounts[id] ?? 0) - (reservedCounts[id] ?? 0));
+    return sum + Math.max(0, count - available) * item.cost;
+  }, 0);
+  const scienceBonus = selectedScienceItems.reduce(
+    (sum, item) => sum + (item.scienceBonus * (item.affinity[mission.theme] ?? 0)) / 100,
+    0,
+  );
   const scienceCapacity = Math.max(
     0,
-    Math.min(100, reliability + (protection?.scienceModifier ?? 0)),
+    Math.min(
+      100,
+      Math.round(reliability * 0.25 + (protection?.scienceModifier ?? 0) + scienceBonus),
+    ),
   );
   const massFactor = 1 + Math.max(0, mass - 800) / 10000;
   const days = Math.ceil(
@@ -1057,21 +1555,25 @@ function calculateMissionMetrics(
       (protection?.daysFactor ?? 1),
   );
   const operatingCost = days * DAILY_OPERATING_COST;
-  const projectedCost = equipmentCost + operatingCost;
-  const remainingBudget = MISSION_BUDGET - projectedCost;
+  const projectedCost = equipmentCost + sciencePurchaseCost + operatingCost;
+  const remainingBudget = budget - projectedCost;
   const efficiency = scienceCapacity / projectedCost;
-  const payloadReady = (vehicle?.cargoCapacity ?? 0) >= mission.payloadKg;
+  const payloadReady =
+    (vehicle?.cargoCapacity ?? 0) >= mission.payloadKg + scienceMass &&
+    scienceSlotsUsed <= scienceSlotsAvailable;
   const ready =
     payloadReady &&
     mass < 1800 &&
-    projectedCost <= MISSION_BUDGET &&
+    projectedCost <= budget &&
     energy >= 30 &&
     scienceCapacity >= 95 &&
     efficiency >= 5;
 
   return {
     mass,
+    budget,
     equipmentCost,
+    sciencePurchaseCost,
     operatingCost,
     projectedCost,
     remainingBudget,
@@ -1081,6 +1583,9 @@ function calculateMissionMetrics(
     scienceCapacity,
     efficiency,
     payloadReady,
+    scienceSlotsUsed,
+    scienceSlotsAvailable,
+    canLaunch: payloadReady && projectedCost <= budget,
     ready,
   };
 }
@@ -1102,17 +1607,22 @@ function BuildStatus({ metrics }: { metrics: MissionMetrics }) {
           role="progressbar"
           aria-label="Orçamento previsto"
           aria-valuemin={0}
-          aria-valuemax={MISSION_BUDGET}
-          aria-valuenow={Math.min(metrics.projectedCost, MISSION_BUDGET)}
+          aria-valuemax={metrics.budget}
+          aria-valuenow={Math.min(metrics.projectedCost, metrics.budget)}
         >
           <i
             data-over-budget={metrics.remainingBudget < 0}
-            style={{ width: `${Math.min((metrics.projectedCost / MISSION_BUDGET) * 100, 100)}%` }}
+            style={{
+              width: `${Math.min((metrics.projectedCost / Math.max(metrics.budget, 0.1)) * 100, 100)}%`,
+            }}
           />
         </div>
         <small>
-          Hoje: ${MISSION_BUDGET.toFixed(1)} mi · Compra futura: ${metrics.equipmentCost.toFixed(1)}{" "}
-          mi
+          Engenheiro: ${metrics.budget.toFixed(1)} mi · Previsto:{" "}
+          {formatBudget(metrics.projectedCost)}
+          <br />
+          Nave: ${metrics.equipmentCost.toFixed(1)} mi · Instrumentos novos: $
+          {metrics.sciencePurchaseCost.toFixed(1)} mi
         </small>
       </div>
       <div className="build-status-card">
@@ -1130,7 +1640,10 @@ function BuildStatus({ metrics }: { metrics: MissionMetrics }) {
         >
           <i style={{ width: `${metrics.scienceCapacity}%` }} />
         </div>
-        <small>Eficiência: {metrics.efficiency.toFixed(1)} p.p./US$ mi</small>
+        <small>
+          Afinidade dos instrumentos com o tema · Eficiência: {metrics.efficiency.toFixed(1)}{" "}
+          p.p./US$ mi
+        </small>
       </div>
       <div className="build-status-card">
         <span>
@@ -1148,11 +1661,351 @@ function BuildStatus({ metrics }: { metrics: MissionMetrics }) {
   );
 }
 
-function ReviewScreen({ selection }: { selection: Record<string, string> }) {
+function ScienceLoadoutScreen({
+  selection,
+  scienceSelection,
+  inventory,
+  scienceSelections,
+  budget,
+  onChange,
+}: {
+  selection: Record<string, string>;
+  scienceSelection: string[];
+  inventory: StoredScienceItem[];
+  scienceSelections: Record<string, string[]>;
+  budget: number;
+  onChange: (itemId: string, operation: "add" | "remove") => void;
+}) {
   const navigate = useNavigate();
   const { missionId = "iss" } = useParams();
   const mission = missions.find((item) => item.id === missionId) ?? missions[0];
-  const metrics = calculateMissionMetrics(mission, selection);
+  const [detailId, setDetailId] = useState(SCIENCE_ITEMS[0].id);
+  const [isDragOver, setIsDragOver] = useState(false);
+  const detail = SCIENCE_ITEMS.find((item) => item.id === detailId) ?? SCIENCE_ITEMS[0];
+  const metrics = calculateMissionMetrics(
+    mission,
+    selection,
+    scienceSelection,
+    inventory,
+    scienceSelections,
+    budget,
+  );
+  const vehicle = componentGroups
+    .find((group) => group.id === "vehicle")
+    ?.options.find((item) => item.id === selection.vehicle);
+  const selectedCounts = scienceSelection.reduce<Record<string, number>>((counts, id) => {
+    counts[id] = (counts[id] ?? 0) + 1;
+    return counts;
+  }, {});
+  const reservedCounts = Object.entries(scienceSelections).reduce<Record<string, number>>(
+    (counts, [reservedMissionId, ids]) => {
+      if (reservedMissionId !== mission.id) {
+        for (const id of ids) counts[id] = (counts[id] ?? 0) + 1;
+      }
+      return counts;
+    },
+    {},
+  );
+  const ownedCounts = inventory.reduce<Record<string, number>>((counts, item) => {
+    counts[item.itemId] = (counts[item.itemId] ?? 0) + 1;
+    return counts;
+  }, {});
+  const canAdd = (item: ScienceItem) => {
+    const usedSlots = metrics.scienceSlotsUsed + item.slots;
+    const addedMass = scienceSelection.reduce((sum, id) => {
+      return sum + (SCIENCE_ITEMS.find((entry) => entry.id === id)?.mass ?? 0);
+    }, 0);
+    return (
+      usedSlots <= metrics.scienceSlotsAvailable &&
+      mission.payloadKg + addedMass + item.mass <= (vehicle?.cargoCapacity ?? 0)
+    );
+  };
+  const missionLoadout = scienceSelection
+    .map((itemId, index) => ({
+      item: SCIENCE_ITEMS.find((entry) => entry.id === itemId),
+      selectionIndex: index,
+    }))
+    .filter((entry): entry is { item: ScienceItem; selectionIndex: number } => Boolean(entry.item));
+  const slotLayout: Array<{
+    item?: ScienceItem;
+    selectionIndex?: number;
+    slotNumber: number;
+    continuation?: boolean;
+  }> = [];
+  let nextSlot = 1;
+  for (const entry of missionLoadout) {
+    slotLayout.push({ ...entry, slotNumber: nextSlot });
+    for (let occupiedSlot = 1; occupiedSlot < entry.item.slots; occupiedSlot += 1) {
+      slotLayout.push({
+        item: entry.item,
+        selectionIndex: entry.selectionIndex,
+        slotNumber: nextSlot + occupiedSlot,
+        continuation: true,
+      });
+    }
+    nextSlot += entry.item.slots;
+  }
+  while (nextSlot <= metrics.scienceSlotsAvailable) {
+    slotLayout.push({ slotNumber: nextSlot });
+    nextSlot += 1;
+  }
+
+  const dropItem = (event: DragEvent<HTMLElement>) => {
+    event.preventDefault();
+    setIsDragOver(false);
+    const itemId = event.dataTransfer.getData("text/plain");
+    const item = SCIENCE_ITEMS.find((entry) => entry.id === itemId);
+    if (item && canAdd(item)) onChange(itemId, "add");
+  };
+
+  return (
+    <main className="build-screen science-screen">
+      <section className="build-content">
+        <BuildStatus metrics={metrics} />
+        <div className="stage-copy">
+          <div className="stage-heading">
+            <span className="kicker">{mission.code} · FASE 2 DE 2 · CARGA CIENTÍFICA</span>
+            <h1>Escolha os instrumentos da missão</h1>
+            <p>
+              Tema: <strong>{mission.themeLabel}</strong>. Equipamentos relacionados ao tema
+              contribuem mais para a capacidade científica.
+            </p>
+          </div>
+          <MissionStageNavigation mission={mission} inScience scienceEnabled />
+        </div>
+
+        <div className="science-loadout">
+          <section className="science-catalog" aria-label="Itens científicos disponíveis">
+            <header className="science-list-heading">
+              <span>
+                <Telescope size={15} /> ITENS DISPONÍVEIS
+              </span>
+              <small>Arraste ou use a seta para adicionar</small>
+            </header>
+            <div className="science-catalog-grid">
+              {SCIENCE_ITEMS.map((item) => {
+                const affinity = item.affinity[mission.theme] ?? 0;
+                const selectedCount = selectedCounts[item.id] ?? 0;
+                const availableOwned = Math.max(
+                  0,
+                  (ownedCounts[item.id] ?? 0) - (reservedCounts[item.id] ?? 0),
+                );
+                const purchaseCount = Math.max(0, selectedCount - availableOwned);
+                const addDisabled = !canAdd(item);
+                return (
+                  <article
+                    className="science-item-card"
+                    key={item.id}
+                    data-selected={selectedCount > 0}
+                    draggable={!addDisabled}
+                    onDragStart={(event) => {
+                      if (addDisabled) {
+                        event.preventDefault();
+                        return;
+                      }
+                      event.dataTransfer.setData("text/plain", item.id);
+                      event.dataTransfer.effectAllowed = "copy";
+                      setDetailId(item.id);
+                    }}
+                  >
+                    <button
+                      className="science-item-info"
+                      onClick={() => setDetailId(item.id)}
+                      aria-pressed={detailId === item.id}
+                    >
+                      <span className="science-item-icon">
+                        <Telescope size={20} />
+                      </span>
+                      <span>
+                        <strong>{item.name}</strong>
+                        <small>
+                          {item.shortName} · {item.mass} kg · {item.slots} slot(s) · afinidade{" "}
+                          {affinity}%
+                        </small>
+                      </span>
+                    </button>
+                    <div className="science-item-actions">
+                      <small>
+                        {availableOwned} no inventário
+                        {purchaseCount > 0 && ` · ${purchaseCount} compra(s) prevista(s)`}
+                      </small>
+                      <strong aria-label={`${selectedCount} selecionados`}>{selectedCount}</strong>
+                    </div>
+                    <button
+                      className="science-move-button"
+                      aria-label={`Adicionar ${item.name} à missão`}
+                      disabled={addDisabled}
+                      onClick={() => {
+                        setDetailId(item.id);
+                        onChange(item.id, "add");
+                      }}
+                    >
+                      <ArrowRight size={17} />
+                    </button>
+                  </article>
+                );
+              })}
+            </div>
+          </section>
+
+          <section
+            className="science-mission-list"
+            aria-label="Itens científicos selecionados para a missão"
+            data-drag-over={isDragOver}
+            onDragOver={(event) => {
+              event.preventDefault();
+              event.dataTransfer.dropEffect = "copy";
+              setIsDragOver(true);
+            }}
+            onDragLeave={(event) => {
+              if (
+                !(event.relatedTarget instanceof Node) ||
+                !event.currentTarget.contains(event.relatedTarget)
+              ) {
+                setIsDragOver(false);
+              }
+            }}
+            onDrop={dropItem}
+          >
+            <header className="science-list-heading">
+              <span>
+                <Rocket size={15} /> ITENS DA MISSÃO
+              </span>
+              <strong>
+                {metrics.scienceSlotsUsed} / {metrics.scienceSlotsAvailable} slots
+              </strong>
+            </header>
+            <div className="science-slots">
+              {slotLayout.map(({ item, selectionIndex, slotNumber, continuation }) =>
+                item ? (
+                  <article
+                    className={`science-slot science-slot-filled${continuation ? " science-slot-continuation" : ""}`}
+                    key={`mission-item-${selectionIndex}-slot-${slotNumber}`}
+                  >
+                    <span className="science-slot-number">SLOT {slotNumber}</span>
+                    {continuation ? (
+                      <small>Compartimento usado por {item.shortName}</small>
+                    ) : (
+                      <>
+                        <strong>{item.name}</strong>
+                        <small>
+                          {item.mass} kg · {item.slots} slot(s) · afinidade{" "}
+                          {item.affinity[mission.theme] ?? 0}%
+                        </small>
+                        <button
+                          aria-label={`Remover ${item.name} da missão`}
+                          onClick={() => onChange(item.id, "remove")}
+                        >
+                          <ArrowLeft size={15} /> Remover
+                        </button>
+                      </>
+                    )}
+                  </article>
+                ) : (
+                  <div className="science-slot science-slot-empty" key={`empty-slot-${slotNumber}`}>
+                    <span>SLOT {slotNumber}</span>
+                    <small>Arraste um item para cá</small>
+                  </div>
+                ),
+              )}
+            </div>
+          </section>
+
+          <section className="science-detail" aria-live="polite">
+            <span className="detail-type">DADO CIENTÍFICO · {detail.shortName}</span>
+            <h2>{detail.name}</h2>
+            <p>{detail.description}</p>
+            <dl className="detail-stats">
+              <div>
+                <dt>MASSA</dt>
+                <dd>{detail.mass} kg</dd>
+              </div>
+              <div>
+                <dt>CUSTO DE COMPRA</dt>
+                <dd>${detail.cost.toFixed(1)} mi</dd>
+              </div>
+              <div>
+                <dt>ESPAÇO NA NAVE</dt>
+                <dd>{detail.slots} compartimento(s)</dd>
+              </div>
+              <div>
+                <dt>DURABILIDADE</dt>
+                <dd>{detail.durability} missões</dd>
+              </div>
+              <div>
+                <dt>BÔNUS CIENTÍFICO BASE</dt>
+                <dd>+{detail.scienceBonus} p.p.</dd>
+              </div>
+              <div>
+                <dt>AFINIDADE COM {mission.themeLabel.toUpperCase()}</dt>
+                <dd>{detail.affinity[mission.theme] ?? 0}%</dd>
+              </div>
+              <div>
+                <dt>NO INVENTÁRIO</dt>
+                <dd>
+                  {inventory.filter((item) => item.itemId === detail.id).length} unidade(s)
+                  {inventory
+                    .filter((item) => item.itemId === detail.id)
+                    .map((item) => ` · ${item.usesRemaining} uso(s)`)
+                    .join("")}
+                </dd>
+              </div>
+            </dl>
+            <aside className="nasa-fact">
+              <span>
+                <BookOpen size={15} /> REGRA DO JOGO
+              </span>
+              <p>{detail.rule}</p>
+              <small>
+                Valores de massa, custo, bônus e durabilidade são parâmetros didáticos, não
+                especificações oficiais.
+              </small>
+            </aside>
+            <a className="science-source" href={detail.sourceUrl} target="_blank" rel="noreferrer">
+              Fonte NASA · {detail.source} <ArrowRight size={14} />
+            </a>
+          </section>
+        </div>
+      </section>
+      <BottomActions
+        backLabel="Montagem da nave"
+        nextLabel="Revisar missão"
+        onBack={() => navigate(`/mission/${mission.id}/build/${componentGroups.length - 1}`)}
+        onNext={() => navigate(`/mission/${mission.id}/review`)}
+      />
+    </main>
+  );
+}
+
+function ReviewScreen({
+  selection,
+  scienceSelection,
+  inventory,
+  scienceSelections,
+  budget,
+  onLaunch,
+}: {
+  selection: Record<string, string>;
+  scienceSelection: string[];
+  inventory: StoredScienceItem[];
+  scienceSelections: Record<string, string[]>;
+  budget: number;
+  onLaunch: () => void;
+}) {
+  const navigate = useNavigate();
+  const { missionId = "iss" } = useParams();
+  const mission = missions.find((item) => item.id === missionId) ?? missions[0];
+  const metrics = calculateMissionMetrics(
+    mission,
+    selection,
+    scienceSelection,
+    inventory,
+    scienceSelections,
+    budget,
+  );
+  const selectedItems = scienceSelection
+    .map((id) => SCIENCE_ITEMS.find((item) => item.id === id))
+    .filter((item): item is ScienceItem => item !== undefined);
 
   return (
     <main className="review-screen">
@@ -1192,6 +2045,7 @@ function ReviewScreen({ selection }: { selection: Record<string, string> }) {
                 <Orbit size={17} /> DESTINO
               </span>
               <strong>{mission.destination}</strong>
+              <small>Tema científico: {mission.themeLabel}</small>
               <small>{mission.objective}</small>
               <small>{metrics.days.toLocaleString("pt-BR")} dias estimados</small>
             </div>
@@ -1227,6 +2081,20 @@ function ReviewScreen({ selection }: { selection: Record<string, string> }) {
                 <small>Meta: 95%</small>
               </div>
             </div>
+            <div className="review-science-selection">
+              <strong>ITENS CIENTÍFICOS A BORDO</strong>
+              {selectedItems.length === 0 ? (
+                <p>Nenhum instrumento selecionado.</p>
+              ) : (
+                <ul>
+                  {selectedItems.map((item, index) => (
+                    <li key={`${item.id}-${index}`}>
+                      {item.name} · {item.mass} kg · afinidade {item.affinity[mission.theme] ?? 0}%
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
             <div className="board-status" data-ready={metrics.ready}>
               <span>{metrics.ready ? <Check size={19} /> : <Gauge size={19} />}</span>
               <div>
@@ -1237,7 +2105,9 @@ function ReviewScreen({ selection }: { selection: Record<string, string> }) {
                 <p>
                   {metrics.ready
                     ? "Todos os sistemas críticos estão dentro dos limites."
-                    : "A missão pode seguir, mas há parâmetros fora da faixa ideal."}
+                    : metrics.canLaunch
+                      ? "A configuração pode voar, mas alguns critérios de sucesso não foram atingidos."
+                      : "Ajuste a capacidade de carga ou o orçamento para poder lançar."}
                 </p>
               </div>
             </div>
@@ -1245,29 +2115,37 @@ function ReviewScreen({ selection }: { selection: Record<string, string> }) {
         </div>
       </section>
       <BottomActions
-        backLabel="Navegação"
-        nextLabel="Executar missão"
-        onBack={() => navigate(`/mission/${missionId}/build/${componentGroups.length - 1}`)}
-        onNext={() => navigate(`/mission/${missionId}/results`)}
+        backLabel="Itens científicos"
+        nextLabel="Lançar missão"
+        nextDisabled={!metrics.canLaunch}
+        onBack={() => navigate(`/mission/${missionId}/science`)}
+        onNext={() => {
+          onLaunch();
+          navigate(`/mission/${missionId}/results`);
+        }}
       />
     </main>
   );
 }
 
 function ResultsScreen({
-  selection,
+  launch,
   onComplete,
 }: {
-  selection: Record<string, string>;
-  onComplete: (ready: boolean) => void;
+  launch?: LaunchRecord;
+  onComplete: (missionId: string, launchId: string) => void;
 }) {
   const navigate = useNavigate();
   const { missionId = "iss" } = useParams();
   const mission = missions.find((item) => item.id === missionId) ?? missions[0];
-  const metrics = calculateMissionMetrics(mission, selection);
+  if (!launch) return <Navigate to={`/mission/${mission.id}/review`} replace />;
+  const metrics = launch.metrics;
+  const scienceItems = launch.scienceSelection
+    .map((itemId) => SCIENCE_ITEMS.find((item) => item.id === itemId))
+    .filter((item): item is ScienceItem => item !== undefined);
 
   const finish = () => {
-    onComplete(metrics.ready);
+    onComplete(mission.id, launch.id);
     navigate("/");
   };
 
@@ -1279,13 +2157,13 @@ function ResultsScreen({
         <Satellite size={36} />
       </div>
       <section className="results-card">
-        <div className="result-emblem" data-success={metrics.ready}>
-          {metrics.ready ? <Trophy size={34} /> : <Target size={34} />}
+        <div className="result-emblem" data-success={launch.success}>
+          {launch.success ? <Trophy size={34} /> : <Target size={34} />}
         </div>
         <span className="kicker">RELATÓRIO · {mission.code}</span>
-        <h1>{metrics.ready ? "Missão concluída" : "Sucesso parcial"}</h1>
+        <h1>{launch.success ? "Missão concluída" : "Sucesso parcial"}</h1>
         <p>
-          {metrics.ready
+          {launch.success
             ? `A missão chegou a ${mission.destination} e cumpriu os parâmetros científicos.`
             : "A configuração não atingiu todos os critérios. Consulte os indicadores e reprojete a nave."}
         </p>
@@ -1305,8 +2183,22 @@ function ResultsScreen({
           </div>
           <div>
             <small>EXPERIÊNCIA</small>
-            <strong>{metrics.ready ? "+450 XP" : "+120 XP"}</strong>
+            <strong>{launch.success ? mission.reward : "+120 XP"}</strong>
           </div>
+        </div>
+        <div className="result-reward">
+          <CircleDollarSign size={17} />
+          {launch.success
+            ? `Recompensa ao concluir: +$${launch.reward.toFixed(1)} mi`
+            : "Sem recompensa financeira nesta missão"}
+        </div>
+        <div className="result-loadout">
+          <strong>ITENS CIENTÍFICOS USADOS</strong>
+          <span>
+            {scienceItems.length > 0
+              ? scienceItems.map((item) => item.name).join(" · ")
+              : "Nenhum instrumento selecionado"}
+          </span>
         </div>
         <aside className="result-learning">
           <Sparkles size={18} />
@@ -1323,7 +2215,7 @@ function ResultsScreen({
             <RotateCcw size={16} /> Reprojetar
           </button>
           <button className="next-action" onClick={finish}>
-            {metrics.ready ? "Desbloquear próxima missão" : "Voltar às missões"}{" "}
+            {launch.success ? "Receber recompensa e continuar" : "Voltar às missões"}{" "}
             <ArrowRight size={16} />
           </button>
         </div>
@@ -1333,37 +2225,298 @@ function ResultsScreen({
 }
 
 function Game() {
-  const [unlockedLevel, setUnlockedLevel] = useState(1);
-  const [selection, setSelection] = useState(initialSelection);
+  const [engineer, setEngineer] = useState<EngineerState>(loadEngineerState);
+
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(ENGINEER_STORAGE_KEY, JSON.stringify(engineer));
+    } catch (error) {
+      console.error("Não foi possível salvar o perfil do engenheiro.", error);
+    }
+  }, [engineer]);
 
   return (
     <Routes>
-      <Route path="/" element={<MissionsScreen unlockedLevel={unlockedLevel} />} />
-      <Route path="/mission/:missionId/context" element={<MissionContextScreen />} />
       <Route
-        path="/mission/:missionId/build/:step"
+        path="/"
         element={
-          <BuildScreen
-            selection={selection}
-            onSelect={(groupId, optionId) =>
-              setSelection((current) => ({ ...current, [groupId]: optionId }))
-            }
+          <MissionsScreen
+            unlockedLevel={engineer.unlockedLevel}
+            budget={engineer.budget}
+            xp={engineer.xp}
           />
         }
       />
-      <Route path="/mission/:missionId/review" element={<ReviewScreen selection={selection} />} />
+      <Route path="/mission/:missionId/context" element={<MissionContextScreen />} />
       <Route
-        path="/mission/:missionId/results"
+        path="/mission/:missionId/build/:step"
+        element={<BuildRoute engineer={engineer} setEngineer={setEngineer} />}
+      />
+      <Route
+        path="/mission/:missionId/science"
+        element={<ScienceRoute engineer={engineer} setEngineer={setEngineer} />}
+      />
+      <Route
+        path="/mission/:missionId/review"
         element={
-          <ResultsScreen
-            selection={selection}
-            onComplete={(ready) => ready && setUnlockedLevel((level) => Math.min(5, level + 1))}
+          <ReviewRoute
+            engineer={engineer}
+            onLaunch={(missionId) => launchMission(missionId, engineer, setEngineer)}
           />
         }
+      />
+      <Route
+        path="/mission/:missionId/results"
+        element={<ResultsRoute engineer={engineer} setEngineer={setEngineer} />}
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
+}
+
+function getMissionShipSelection(engineer: EngineerState, missionId: string) {
+  return { ...initialSelection, ...engineer.shipSelections[missionId] };
+}
+
+function BuildRoute({
+  engineer,
+  setEngineer,
+}: {
+  engineer: EngineerState;
+  setEngineer: Dispatch<SetStateAction<EngineerState>>;
+}) {
+  const { missionId = "iss" } = useParams();
+  return (
+    <BuildScreen
+      selection={getMissionShipSelection(engineer, missionId)}
+      scienceSelection={engineer.scienceSelections[missionId] ?? []}
+      inventory={engineer.inventory}
+      scienceSelections={engineer.scienceSelections}
+      budget={engineer.budget}
+      scienceEnabled={engineer.completedBuilds.includes(missionId)}
+      onCompleteBuild={() =>
+        setEngineer((current) => ({
+          ...current,
+          completedBuilds: current.completedBuilds.includes(missionId)
+            ? current.completedBuilds
+            : [...current.completedBuilds, missionId],
+        }))
+      }
+      onSelect={(groupId, optionId) =>
+        setEngineer((current) => ({
+          ...current,
+          shipSelections: {
+            ...current.shipSelections,
+            [missionId]: {
+              ...getMissionShipSelection(current, missionId),
+              [groupId]: optionId,
+            },
+          },
+        }))
+      }
+    />
+  );
+}
+
+function ScienceRoute({
+  engineer,
+  setEngineer,
+}: {
+  engineer: EngineerState;
+  setEngineer: Dispatch<SetStateAction<EngineerState>>;
+}) {
+  const { missionId = "iss" } = useParams();
+  const mission = missions.find((item) => item.id === missionId) ?? missions[0];
+  if (!engineer.completedBuilds.includes(missionId)) {
+    return <Navigate to={`/mission/${mission.id}/build/0`} replace />;
+  }
+  return (
+    <ScienceLoadoutScreen
+      selection={getMissionShipSelection(engineer, missionId)}
+      scienceSelection={engineer.scienceSelections[missionId] ?? []}
+      inventory={engineer.inventory}
+      scienceSelections={engineer.scienceSelections}
+      budget={engineer.budget}
+      onChange={(itemId, operation) =>
+        setEngineer((current) => {
+          const currentSelection = current.scienceSelections[missionId] ?? [];
+          const selection = getMissionShipSelection(current, missionId);
+          const item = SCIENCE_ITEMS.find((entry) => entry.id === itemId);
+          if (!item) return current;
+          const nextScienceSelection =
+            operation === "add"
+              ? [...currentSelection, itemId]
+              : currentSelection.filter((id, index) => {
+                  const lastIndex = currentSelection.lastIndexOf(itemId);
+                  return id !== itemId || index !== lastIndex;
+                });
+          const metrics = calculateMissionMetrics(
+            mission,
+            selection,
+            nextScienceSelection,
+            current.inventory,
+            current.scienceSelections,
+            current.budget,
+          );
+          if (
+            operation === "add" &&
+            (metrics.scienceSlotsUsed > metrics.scienceSlotsAvailable || !metrics.payloadReady)
+          ) {
+            return current;
+          }
+          return {
+            ...current,
+            scienceSelections: {
+              ...current.scienceSelections,
+              [missionId]: nextScienceSelection,
+            },
+          };
+        })
+      }
+    />
+  );
+}
+
+function ReviewRoute({
+  engineer,
+  onLaunch,
+}: {
+  engineer: EngineerState;
+  onLaunch: (missionId: string) => void;
+}) {
+  const { missionId = "iss" } = useParams();
+  const mission = missions.find((item) => item.id === missionId) ?? missions[0];
+  if (!engineer.completedBuilds.includes(missionId)) {
+    return <Navigate to={`/mission/${mission.id}/build/0`} replace />;
+  }
+  return (
+    <ReviewScreen
+      selection={getMissionShipSelection(engineer, missionId)}
+      scienceSelection={engineer.scienceSelections[missionId] ?? []}
+      inventory={engineer.inventory}
+      scienceSelections={engineer.scienceSelections}
+      budget={engineer.budget}
+      onLaunch={() => onLaunch(missionId)}
+    />
+  );
+}
+
+function ResultsRoute({
+  engineer,
+  setEngineer,
+}: {
+  engineer: EngineerState;
+  setEngineer: Dispatch<SetStateAction<EngineerState>>;
+}) {
+  const { missionId = "iss" } = useParams();
+  return (
+    <ResultsScreen
+      launch={engineer.launches[missionId]}
+      onComplete={(completedMissionId, launchId) =>
+        setEngineer((current) => {
+          const launch = current.launches[completedMissionId];
+          if (!launch || launch.id !== launchId || launch.completed) return current;
+          const missionLevel = missions.find((item) => item.id === completedMissionId)?.level ?? 1;
+          return {
+            ...current,
+            budget: current.budget + (launch.success ? launch.reward : 0),
+            xp: current.xp + getLaunchExperience(completedMissionId, launch.success),
+            unlockedLevel: launch.success
+              ? Math.min(5, Math.max(current.unlockedLevel, missionLevel + 1))
+              : current.unlockedLevel,
+            launches: {
+              ...current.launches,
+              [completedMissionId]: { ...launch, completed: true },
+            },
+          };
+        })
+      }
+    />
+  );
+}
+
+function launchMission(
+  missionId: string,
+  engineer: EngineerState,
+  setEngineer: Dispatch<SetStateAction<EngineerState>>,
+) {
+  const mission = missions.find((item) => item.id === missionId);
+  if (!mission) return;
+  const selection = getMissionShipSelection(engineer, missionId);
+  const scienceSelection = engineer.scienceSelections[missionId] ?? [];
+  const metrics = calculateMissionMetrics(
+    mission,
+    selection,
+    scienceSelection,
+    engineer.inventory,
+    engineer.scienceSelections,
+    engineer.budget,
+  );
+  if (!metrics.canLaunch) return;
+
+  const reservedCounts = Object.entries(engineer.scienceSelections).reduce<Record<string, number>>(
+    (counts, [reservedMissionId, ids]) => {
+      if (reservedMissionId !== missionId) {
+        for (const id of ids) counts[id] = (counts[id] ?? 0) + 1;
+      }
+      return counts;
+    },
+    {},
+  );
+  const consumedInstances = new Set<string>();
+  const damagedInstances: StoredScienceItem[] = [];
+  const selectionCounts = scienceSelection.reduce<Record<string, number>>((counts, id) => {
+    counts[id] = (counts[id] ?? 0) + 1;
+    return counts;
+  }, {});
+
+  for (const [itemId, count] of Object.entries(selectionCounts)) {
+    const item = SCIENCE_ITEMS.find((entry) => entry.id === itemId);
+    if (!item) continue;
+    const owned = engineer.inventory
+      .filter((entry) => entry.itemId === itemId)
+      .sort((left, right) => left.usesRemaining - right.usesRemaining);
+    const availableOwned = owned.slice(
+      0,
+      Math.max(0, owned.length - (reservedCounts[itemId] ?? 0)),
+    );
+    for (let index = 0; index < count; index += 1) {
+      const instance =
+        index < availableOwned.length
+          ? availableOwned[index]
+          : {
+              instanceId: crypto.randomUUID(),
+              itemId,
+              usesRemaining: item.durability,
+            };
+      if (index < availableOwned.length) consumedInstances.add(instance.instanceId);
+      const remainingUses = instance.usesRemaining - 1;
+      if (remainingUses > 0) {
+        damagedInstances.push({ ...instance, usesRemaining: remainingUses });
+      }
+    }
+  }
+
+  const launch: LaunchRecord = {
+    id: crypto.randomUUID(),
+    missionId,
+    shipSelection: selection,
+    scienceSelection,
+    metrics,
+    success: metrics.ready,
+    reward: metrics.ready ? 5 + mission.level + metrics.scienceCapacity * 0.1 : 0,
+    completed: false,
+  };
+  setEngineer((current) => ({
+    ...current,
+    budget: current.budget - metrics.projectedCost,
+    scienceSelections: { ...current.scienceSelections, [missionId]: [] },
+    inventory: [
+      ...current.inventory.filter((item) => !consumedInstances.has(item.instanceId)),
+      ...damagedInstances,
+    ],
+    launches: { ...current.launches, [missionId]: launch },
+  }));
 }
 
 export default function App() {
